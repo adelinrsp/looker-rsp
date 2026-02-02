@@ -18,6 +18,17 @@ import { fetchGoogleAdsPerformance, GoogleAdsData } from './services/googleAdsSe
 
 const SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
 
+// DEBUG: Log environment variables
+if (typeof window !== 'undefined') {
+  console.log('📋 Environment Variables:', {
+    VITE_GOOGLE_SCRIPT_URL: import.meta.env.VITE_GOOGLE_SCRIPT_URL ? '✓ SET' : '❌ MISSING',
+    VITE_GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY ? '✓ SET' : '❌ MISSING',
+    VITE_FACEBOOK_ACCESS_TOKEN: import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN ? '✓ SET' : '❌ MISSING',
+    VITE_FACEBOOK_AD_ACCOUNT_ID: import.meta.env.VITE_FACEBOOK_AD_ACCOUNT_ID ? '✓ SET' : '❌ MISSING',
+    VITE_FACEBOOK_PAGE_ID: import.meta.env.VITE_FACEBOOK_PAGE_ID ? '✓ SET' : '❌ MISSING',
+  });
+}
+
 export type AnalysisCategory = 'all' | 'commerce' | 'technique';
 
 const App: React.FC = () => {
