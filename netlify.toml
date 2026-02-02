@@ -1,7 +1,6 @@
 [build]
-  command = "npm run build"
+  command = "./build.sh"
   publish = "dist"
-  environment = { VITE_FACEBOOK_ACCESS_TOKEN = "", VITE_FACEBOOK_AD_ACCOUNT_ID = "", VITE_FACEBOOK_PAGE_ID = "", VITE_GOOGLE_SCRIPT_URL = "" }
 
 [env]
   SECRETS_SCAN_OMIT_PATHS = "dist/assets/*.js"
