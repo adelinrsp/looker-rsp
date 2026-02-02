@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar';
 import ResultsAnalysis from './components/ResultsAnalysis';
 import CreativeAnalysis from './components/CreativeAnalysis';
@@ -18,20 +19,14 @@ import { fetchGoogleAdsPerformance, GoogleAdsData } from './services/googleAdsSe
 
 const SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
 
-// DEBUG: Log environment variables
-if (typeof window !== 'undefined') {
-  console.log('📋 Environment Variables:', {
-    VITE_GOOGLE_SCRIPT_URL: import.meta.env.VITE_GOOGLE_SCRIPT_URL ? '✓ SET' : '❌ MISSING',
-    VITE_GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY ? '✓ SET' : '❌ MISSING',
-    VITE_FACEBOOK_ACCESS_TOKEN: import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN ? '✓ SET' : '❌ MISSING',
-    VITE_FACEBOOK_AD_ACCOUNT_ID: import.meta.env.VITE_FACEBOOK_AD_ACCOUNT_ID ? '✓ SET' : '❌ MISSING',
-    VITE_FACEBOOK_PAGE_ID: import.meta.env.VITE_FACEBOOK_PAGE_ID ? '✓ SET' : '❌ MISSING',
-  });
-}
-
 export type AnalysisCategory = 'all' | 'commerce' | 'technique';
 
 const App: React.FC = () => {
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // App state
   const [activeTab, setActiveTab] = useState('results');
   const [analysisCategory, setAnalysisCategory] = useState<AnalysisCategory>('all');
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -41,6 +36,13 @@ const App: React.FC = () => {
   const [creatives, setCreatives] = useState<FacebookCreativeData[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('crm_auth_token');
+    setIsAuthenticated(!!token);
+    setIsCheckingAuth(false);
+  }, []);
 
   const getDefaultDates = () => {
     const now = new Date();
@@ -95,6 +97,27 @@ const App: React.FC = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('crm_auth_token');
+    setIsAuthenticated(false);
+  };
+
+  // Show login page if not authenticated
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 font-bold">Vérification...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -143,15 +166,22 @@ const App: React.FC = () => {
           
           <div className="flex items-end space-x-4">
             <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100">
-              <DateRangePicker 
-                startDate={startDate} 
-                endDate={endDate} 
+              <DateRangePicker
+                startDate={startDate}
+                endDate={endDate}
                 onRangeChange={(s, e) => {
                   setStartDate(s);
                   setEndDate(e);
-                }} 
+                }}
               />
             </div>
+            <button
+              onClick={handleLogout}
+              className="px-6 py-2.5 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all shadow-sm"
+              title="Déconnexion"
+            >
+              🚪 Sortir
+            </button>
           </div>
         </header>
 
