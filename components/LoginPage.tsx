@@ -33,12 +33,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-12">
-          <div className="inline-block mb-4">
-            <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-2xl font-black text-white">☀️</span>
+          <div className="inline-block mb-6">
+            <div className="h-16 flex items-center justify-center">
+              <img
+                src="https://www.rhonesolairepro.com/wp-content/uploads/2024/04/logo_rsp.svg"
+                alt="Rhône Solaire Pro"
+                className="h-full w-auto brightness-0 invert"
+              />
             </div>
           </div>
-          <h1 className="text-4xl font-black text-white mb-2">Rhône Solaire</h1>
           <p className="text-slate-400 font-bold uppercase tracking-widest text-[11px]">Console Pilotage</p>
         </div>
 

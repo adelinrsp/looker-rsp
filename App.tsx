@@ -120,7 +120,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
       
       <main className="flex-1 ml-64 p-8 xl:p-12">
         <header className="flex items-center justify-between mb-12">
@@ -175,13 +175,6 @@ const App: React.FC = () => {
                 }}
               />
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-6 py-2.5 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all shadow-sm"
-              title="Déconnexion"
-            >
-              🚪 Sortir
-            </button>
           </div>
         </header>
 

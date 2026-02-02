@@ -4,9 +4,10 @@ import React from 'react';
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onLogout?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) => {
   const menuItems = [
     { id: 'results', icon: 'fa-chart-pie', label: 'Analyse générale' },
     { id: 'expenses', icon: 'fa-wallet', label: 'Dépenses' },
@@ -37,8 +38,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
             key={item.id}
             onClick={() => setActiveTab(item.id)}
             className={`w-full flex items-center space-x-4 px-6 py-4 rounded-2xl transition-all duration-300 text-left ${
-              activeTab === item.id 
-                ? 'bg-amber-500 text-white shadow-xl shadow-amber-500/30' 
+              activeTab === item.id
+                ? 'bg-amber-500 text-white shadow-xl shadow-amber-500/30'
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}
           >
@@ -49,6 +50,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
           </button>
         ))}
       </nav>
+
+      {/* Logout Button */}
+      {onLogout && (
+        <div className="border-t border-slate-800 p-4 mt-auto">
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center space-x-3 px-4 py-3 bg-red-900/30 text-red-400 rounded-xl hover:bg-red-900/50 transition-colors text-left"
+          >
+            <i className="fas fa-sign-out-alt text-sm"></i>
+            <span className="font-bold text-[11px] uppercase tracking-widest">Déconnexion</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
