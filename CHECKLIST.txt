@@ -1,0 +1,175 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                  🔒 SECURITY CHECKLIST - AVANT GITHUB                       ║
+║                                                                              ║
+║  Temps total: ~75 minutes                                                   ║
+║  Difficulté: Facile (suivre les instructions)                              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📖 LECTURE REQUISE
+═════════════════════════════════════════════════════════════════════════════
+  [ ] Lire: QUICK_START_SECURITY.md (5 min)
+      → Instructions pas à pas pour tout faire
+
+
+🔑 PHASE 1: RÉGÉNÉRER LES SECRETS (15 min)
+═════════════════════════════════════════════════════════════════════════════
+  [ ] Facebook Token
+      1. Aller sur https://developers.facebook.com/
+      2. Apps → votre app → Tools → Graph API Explorer
+      3. Cliquer "Generate Access Token"
+      4. Copier le nouveau token
+      5. Garder pour Phase 2
+      
+  [ ] Google Gemini API Key
+      1. Aller sur https://aistudio.google.com/
+      2. Cliquer "Get API Key"
+      3. Copier la clé
+      4. Garder pour Phase 2
+      
+  [ ] Google Apps Script URL
+      1. Aller dans Google Apps Script
+      2. Déploiement → Copier l'URL complète
+      3. Garder pour Phase 2
+
+
+📝 PHASE 2: METTRE À JOUR .env.local (5 min)
+═════════════════════════════════════════════════════════════════════════════
+  [ ] Éditer .env.local (à la racine du projet)
+  [ ] Remplacer avec vos secrets (obtenus en Phase 1):
+  
+      VITE_GOOGLE_SCRIPT_URL=https://script.google.com/macros/s/YOUR_ID/exec
+      VITE_GEMINI_API_KEY=votre_clé_ici
+      VITE_FACEBOOK_ACCESS_TOKEN=votre_token_ici
+      VITE_FACEBOOK_AD_ACCOUNT_ID=1459811254717955
+      VITE_FACEBOOK_PAGE_ID=RhoneSolairePro
+      
+  [ ] Sauvegarder
+
+
+💻 PHASE 3: REFACTORISER LE CODE (30 min)
+═════════════════════════════════════════════════════════════════════════════
+  Suivre les instructions dans REFACTORING_SECRETS.md
+  
+  [ ] Fichier 1: App.tsx (ligne 19)
+      Avant: const SCRIPT_URL = 'https://script.google.com/...'
+      Après: const SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
+      
+  [ ] Fichier 2: services/facebookAdsService.ts (lignes 30-32)
+      Avant: const ACCESS_TOKEN = 'EAALf...'
+      Après: const ACCESS_TOKEN = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN;
+      
+      Avant: const AD_ACCOUNT_ID = '1459...'
+      Après: const AD_ACCOUNT_ID = import.meta.env.VITE_FACEBOOK_AD_ACCOUNT_ID;
+      
+      Avant: const PAGE_ID = 'RhoneSolaire...'
+      Après: const PAGE_ID = import.meta.env.VITE_FACEBOOK_PAGE_ID;
+      
+  [ ] Fichier 3: components/AnalysisPage.tsx
+      Même changement que App.tsx (ligne 19)
+      
+  [ ] Fichier 4: components/ResultsAnalysis.tsx
+      Même changement que App.tsx (ligne 19)
+      
+  [ ] Sauvegarder tous les fichiers
+
+
+🧪 PHASE 4: VÉRIFICATION (5 min)
+═════════════════════════════════════════════════════════════════════════════
+  [ ] Test 1: Vérifier aucun secret en dur
+      Commande: grep -r "EAAB\|script.google.com" src/
+      Résultat attendu: ZÉRO résultats
+      
+  [ ] Test 2: Tester localement
+      Commande: npm run dev
+      Résultat attendu: App fonctionne sur http://localhost:5173
+      
+  [ ] Test 3: Vérifier .env.local ignoré
+      Commande: git status
+      .env.local doit être en ROUGE (non-tracké)
+
+
+📤 PHASE 5: GITHUB (5 min)
+═════════════════════════════════════════════════════════════════════════════
+  [ ] Vérifier avant commit:
+      git add .
+      git diff --cached
+      → Ne doit PAS montrer vos secrets!
+      
+  [ ] Commit:
+      git commit -m "security: externalize secrets to environment variables"
+      
+  [ ] Push:
+      git push
+
+
+🚀 PHASE 6: NETLIFY (10 min)
+═════════════════════════════════════════════════════════════════════════════
+  [ ] Aller dans Netlify Dashboard
+  
+  [ ] Site Settings → Build & Deploy → Environment
+  
+  [ ] Cliquer "Edit Variables"
+  
+  [ ] Ajouter chaque variable (COPIER-COLLER les valeurs de .env.local):
+      VITE_GOOGLE_SCRIPT_URL
+      VITE_GEMINI_API_KEY
+      VITE_FACEBOOK_ACCESS_TOKEN
+      VITE_FACEBOOK_AD_ACCOUNT_ID
+      VITE_FACEBOOK_PAGE_ID
+      
+  [ ] Sauvegarder
+  
+  [ ] Attendre le redéploiement automatique
+  
+  [ ] Tester l'app en production
+
+
+✅ VÉRIFICATION FINALE
+═════════════════════════════════════════════════════════════════════════════
+  [ ] App fonctionne localement
+  [ ] App fonctionne sur Netlify
+  [ ] Aucun secret en dur dans le code (grep = 0 résultats)
+  [ ] .env.local en rouge dans git status
+  [ ] Variables configurées dans Netlify
+
+
+🎉 TERMINÉ!
+═════════════════════════════════════════════════════════════════════════════
+  Ton projet est maintenant sécurisé et prêt pour la production!
+  
+  Prochaines étapes:
+  - Surveiller l'utilisation des APIs
+  - Régénérer les tokens tous les 6 mois
+  - Faire un audit de sécurité régulièrement
+
+
+⏱️  TEMPS ESTIMÉ PAR PHASE:
+═════════════════════════════════════════════════════════════════════════════
+  Phase 1 (Secrets):           15 min
+  Phase 2 (.env.local):         5 min
+  Phase 3 (Refactoring):       30 min
+  Phase 4 (Vérification):       5 min
+  Phase 5 (GitHub):             5 min
+  Phase 6 (Netlify):           10 min
+  ────────────────────────────────────
+  TOTAL:                        70 min
+
+
+❓ SI TU TROUVES UN PROBLÈME:
+═════════════════════════════════════════════════════════════════════════════
+  "Variable non trouvée en dev?"
+    → Redémarre: npm run dev
+    
+  ".env.local visible dans Git?"
+    → git rm --cached .env.local
+    
+  "Production ne marche pas?"
+    → Vérifie Netlify → Site Settings → Environment
+    
+  "Plus de questions?"
+    → Voir QUICK_START_SECURITY.md ou SECURITY_README.md
+
+═════════════════════════════════════════════════════════════════════════════
+Créé par: Claude Code Security Auditor
+Date: 2 février 2026
+═════════════════════════════════════════════════════════════════════════════

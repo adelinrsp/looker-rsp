@@ -1,0 +1,8 @@
+{
+  "name": "Rhône Solaire Pro - CRM Telepro",
+  "description": "Plateforme de gestion de prospects et de téléprospection intelligente pour Rhône Solaire Pro, optimisée pour le suivi des relances et la prise de rendez-vous.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}
