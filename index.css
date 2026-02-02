@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.03em;
+}
+
+.tracking-premium {
+  letter-spacing: 0.15em;
+}
+
+.leaflet-container {
+  background: #f8fafc;
+  border-radius: 40px;
+}
