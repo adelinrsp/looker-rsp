@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Lead, CompanyExpense } from '../types';
 import { fetchFacebookAdsPerformance, FacebookAdsData } from '../services/facebookAdsService';
 import { fetchGoogleAdsPerformance, GoogleAdsData } from '../services/googleAdsService';
@@ -20,7 +20,8 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
   const [hiddenSeries, setHiddenSeries] = useState<Record<string, boolean>>({
     prospects: false,
     rdvs: false,
-    ventes: false
+    ventes: false,
+    tendance: false
   });
 
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
@@ -216,7 +217,23 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
         }
       }
     });
-    return Object.values(dailyMap);
+    const data = Object.values(dailyMap);
+
+    // Régression linéaire sur les prospects
+    const n = data.length;
+    if (n > 1) {
+      const sumX = data.reduce((acc, _, i) => acc + i, 0);
+      const sumY = data.reduce((acc, d) => acc + (d as any).prospects, 0);
+      const sumXY = data.reduce((acc, d, i) => acc + i * (d as any).prospects, 0);
+      const sumX2 = data.reduce((acc, _, i) => acc + i * i, 0);
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+      data.forEach((d: any, i) => {
+        d.tendance = Math.max(0, parseFloat((intercept + slope * i).toFixed(2)));
+      });
+    }
+
+    return data;
   }, [stats.current.filteredLeads, startDate, endDate]);
 
   return (
@@ -417,13 +434,23 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
                 onClick={(o: any) => setHiddenSeries(p => ({...p, [o.dataKey]: !p[o.dataKey]}))} 
                 formatter={(v, e: any) => (
                   <span className={`text-[9px] font-black uppercase tracking-widest ${hiddenSeries[e.dataKey] ? 'opacity-30' : 'opacity-100'}`}>
-                    {v === 'prospects' ? 'Prospects' : v === 'rdvs' ? 'Qualifiés' : 'Ventes'}
+                    {v === 'prospects' ? 'Prospects' : v === 'rdvs' ? 'Qualifiés' : v === 'ventes' ? 'Ventes' : 'Tendance Prospects'}
                   </span>
-                )} 
+                )}
               />
               <Area type="monotone" dataKey="prospects" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorProspects)" hide={hiddenSeries.prospects} />
               <Area type="monotone" dataKey="rdvs" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorRDVs)" hide={hiddenSeries.rdvs} />
               <Area type="monotone" dataKey="ventes" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorVentes)" hide={hiddenSeries.ventes} />
+              <Line
+                type="linear"
+                dataKey="tendance"
+                stroke="#ef4444"
+                strokeWidth={3}
+                strokeDasharray="8 4"
+                dot={false}
+                activeDot={{ r: 5, fill: '#ef4444', stroke: '#fff', strokeWidth: 2 }}
+                hide={hiddenSeries.tendance}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
