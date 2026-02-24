@@ -1,11 +1,10 @@
-
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Lead, CompanyExpense } from '../types';
 import { fetchFacebookAdsPerformance, FacebookAdsData } from '../services/facebookAdsService';
 import { fetchGoogleAdsPerformance, GoogleAdsData } from '../services/googleAdsService';
 
-const SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrJZso0q9OdL2XTeCT3pLtDh7JqF349JJIAmRcrrLvl1z2XWHIi-78ygIX76SwhIiixw/exec';
 
 interface ResultsAnalysisProps {
   leads: Lead[];
@@ -24,8 +23,39 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
     ventes: false
   });
 
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
   const [prevAdsData, setPrevAdsData] = useState<{ fb: FacebookAdsData | null; g: GoogleAdsData | null }>({ fb: null, g: null });
   const [isLoadingPrev, setIsLoadingPrev] = useState(false);
+
+  // Fermeture du dropdown au clic extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Liste des sources uniques (hors "Inconnue")
+  const availableSources = useMemo(() => {
+    // FIX: ensured 's' is treated as string for toLowerCase by adding a type guard
+    return Array.from(new Set(leads.map(l => l.source)))
+      .filter((s): s is string => typeof s === 'string' && s.toLowerCase() !== 'inconnue')
+      .sort();
+  }, [leads]);
+
+  const toggleSource = (source: string) => {
+    setSelectedSources(prev => 
+      prev.includes(source) 
+        ? prev.filter(s => s !== source) 
+        : [...prev, source]
+    );
+  };
 
   const dateToNum = (dateVal: any): number => {
     if (!dateVal) return 0;
@@ -85,20 +115,28 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
     const peLimit = dateToNum(prevPeriod.end);
 
     const processStats = (lList: Lead[], eList: CompanyExpense[], fb: FacebookAdsData | null, g: GoogleAdsData | null, start: number, end: number) => {
-      const categoryFilteredLeads = lList.filter(l => {
+      // Filtrage par multi-sources
+      const filteredBySource = lList.filter(l => 
+        selectedSources.length === 0 || selectedSources.includes(l.source)
+      );
+      
+      const categoryFilteredLeads = filteredBySource.filter(l => {
         const isTech = l.status === 'Opportunité Service Technique';
         if (category === 'commerce') return !isTech;
         if (category === 'technique') return isTech;
         return true;
       });
+
       const filteredLeads = categoryFilteredLeads.filter(l => {
         const n = dateToNum(l.dateEntry);
         return n >= start && n <= end;
       });
+
       const filteredExpenses = eList.filter(e => {
         const n = dateToNum(e.date);
         return n >= start && n <= end;
       });
+
       const prospects = filteredLeads.length;
       const qualifStatuses = ['Parrainage', 'Opportunité Commerce', 'Opportunité Service Technique', 'Opportunité Tertiaire', 'RDV Fixé'];
       const rdvs = filteredLeads.filter(l => qualifStatuses.includes(l.status)).length;
@@ -106,9 +144,13 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
       const sales = soldLeads.length;
       const revenue = soldLeads.reduce((acc, curr) => acc + cleanAmount(curr.amount), 0);
       
-      const currentFbSpend = fb?.spend || 0;
-      const currentGSpend = g?.spend || 0;
-      const currentCompanySpend = filteredExpenses.reduce((acc, curr) => acc + cleanAmount(curr.amount), 0);
+      // Calcul des dépenses publicitaires si la source est incluse
+      const isFbSelected = selectedSources.length === 0 || selectedSources.some(s => s.toLowerCase().includes('facebook') || s.toLowerCase().includes('meta'));
+      const isGSelected = selectedSources.length === 0 || selectedSources.some(s => s.toLowerCase().includes('google'));
+      
+      const currentFbSpend = isFbSelected ? (fb?.spend || 0) : 0;
+      const currentGSpend = isGSelected ? (g?.spend || 0) : 0;
+      const currentCompanySpend = selectedSources.length === 0 ? filteredExpenses.reduce((acc, curr) => acc + cleanAmount(curr.amount), 0) : 0;
       const totalSpend = currentFbSpend + currentGSpend + currentCompanySpend;
       
       return { prospects, rdvs, sales, revenue, spend: totalSpend, fbSpend: currentFbSpend, gSpend: currentGSpend, companySpend: currentCompanySpend, filteredLeads };
@@ -132,7 +174,7 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
         cpv: calcTrend(current.sales > 0 ? current.spend / current.sales : 0, previous.sales > 0 ? previous.spend / previous.sales : 0)
       }
     };
-  }, [leads, startDate, endDate, fbData, gData, companyExpenses, prevAdsData, prevPeriod, category]);
+  }, [leads, startDate, endDate, fbData, gData, companyExpenses, prevAdsData, prevPeriod, category, selectedSources]);
 
   const TrendBadge = ({ value, prevValue, isInverted = false, unit = '' }: { value: number, prevValue: number, isInverted?: boolean, unit?: string }) => {
     if (isNaN(value)) return null;
@@ -251,12 +293,10 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
                 {stats.current.spend.toLocaleString('fr-FR', { minimumFractionDigits: 0 })} <span className="text-xs font-medium text-slate-500">€</span>
               </h3>
               
-              {/* Le Badge de tendance est masqué au profit du détail au hover pour gagner de la place */}
               <div className="group-hover:hidden block transition-all">
                 <TrendBadge value={stats.trends.spend} prevValue={stats.previous.spend} unit=" €" isInverted={true} />
               </div>
 
-              {/* SECTION DÉTAIL DYNAMIQUE (Uniquement au Hover) */}
               <div className="max-h-0 overflow-hidden group-hover:max-h-24 group-hover:mt-3 transition-all duration-300 border-t border-white/5 pt-0 group-hover:pt-3">
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest">
@@ -299,7 +339,64 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
         </div>
       </div>
 
-      <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100">
+      <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 overflow-visible">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">Analyse des flux</h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Évolution temporelle des prospects et ventes</p>
+          </div>
+          
+          {/* MULTI-SELECT DROPDOWN CUSTOM */}
+          <div className="relative" ref={dropdownRef}>
+            <div className="flex items-center space-x-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-2 whitespace-nowrap">Sources :</span>
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-amber-500 shadow-sm flex items-center space-x-2 min-w-[140px] justify-between"
+              >
+                <span>
+                  {selectedSources.length === 0 
+                    ? "Toutes" 
+                    : `${selectedSources.length} sélectionnée${selectedSources.length > 1 ? 's' : ''}`}
+                </span>
+                <i className={`fas fa-chevron-down text-[8px] transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}></i>
+              </button>
+            </div>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 z-[100] p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-50">
+                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Filtrer par canal</span>
+                   <button 
+                    onClick={() => setSelectedSources([])}
+                    className="text-[8px] font-black text-amber-500 uppercase tracking-widest hover:text-amber-600"
+                   >
+                     Tout voir
+                   </button>
+                </div>
+                <div className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
+                  {availableSources.map(source => (
+                    <label key={source} className="flex items-center space-x-3 p-2 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors group">
+                      <div className="relative flex items-center">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedSources.includes(source)}
+                          onChange={() => toggleSource(source)}
+                          className="peer appearance-none w-4 h-4 rounded border border-slate-300 checked:bg-amber-500 checked:border-amber-500 transition-all cursor-pointer"
+                        />
+                        <i className="fas fa-check absolute text-[8px] text-white left-1 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></i>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${selectedSources.includes(source) ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-700'}`}>
+                        {source}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="h-[420px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
@@ -331,6 +428,12 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
           </ResponsiveContainer>
         </div>
       </div>
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+      `}</style>
     </div>
   );
 };

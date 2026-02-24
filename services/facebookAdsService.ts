@@ -27,9 +27,9 @@ export interface SocialPost {
   isVideo?: boolean;
 }
 
-const ACCESS_TOKEN = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || '';
-const AD_ACCOUNT_ID = import.meta.env.VITE_FACEBOOK_AD_ACCOUNT_ID || '';
-const PAGE_ID = import.meta.env.VITE_FACEBOOK_PAGE_ID || '';
+const ACCESS_TOKEN = 'EAALfZC8LaIfIBQg7xqoJ0IKnaMySZCyxUeEOLtrLaQpUZBJ6hZBCcKO4TwGzTCTpjgZAXZBiaE35T5h1ZAX4jTiBKHnEcnKZCa9lZCGqNR7xqclPBkPeVaGYaLq7ZAQJTPE9CLe44aAinzz3PC744nmGjMpQw1rso8MeE7ZCN2IS1hnRZARBi5pYSYV3NN0gDF9bpBPoYiyi5i2V';
+const AD_ACCOUNT_ID = '1459811254717955';
+const PAGE_ID = 'RhoneSolairePro';
 
 export async function fetchFacebookAdsPerformance(since?: string, until?: string): Promise<FacebookAdsData> {
   try {

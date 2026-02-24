@@ -8,7 +8,7 @@ import DateRangePicker from './DateRangePicker';
 import { fetchFacebookAdsPerformance, FacebookAdsData } from '../services/facebookAdsService';
 import { fetchGoogleAdsPerformance, GoogleAdsData } from '../services/googleAdsService';
 
-const SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1hSotHmN4tWfrrCcro00omsl30WbofXpqV5kckZT9romFC8RacxqJB3KWOyI_itvCNA/exec';
 
 interface AnalysisPageProps {
   leads: Lead[];
@@ -85,6 +85,8 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({ leads }) => {
             endDate={endDate} 
             fbData={fbData}
             gData={googleData}
+            // Fix: Added required category prop
+            category="all"
           />
         )}
         {subTab === 'creatives' && (

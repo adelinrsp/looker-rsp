@@ -131,9 +131,9 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, endDate, o
 
   return (
     <div className="relative" ref={containerRef}>
-      <button
+      <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-4 px-6 py-2.5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-amber-500 transition-all group"
+        className="flex items-center space-x-4 px-6 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-amber-500 transition-all group"
       >
         <div className="flex items-center space-x-2">
           <i className="far fa-calendar text-slate-400 group-hover:text-amber-500 transition-colors"></i>

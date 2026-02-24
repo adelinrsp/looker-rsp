@@ -12,37 +12,36 @@ import ChatBot from './components/ChatBot';
 import DateRangePicker from './components/DateRangePicker';
 import GeoTargeting from './components/GeoTargeting';
 import FacebookPosts from './components/FacebookPosts';
-import { Lead, CompanyExpense } from './types';
+import AppointmentCalendar from './components/AppointmentCalendar';
+import QuestionnaireView from './components/QuestionnaireView';
+import SalesPerformanceAnalysis from './components/SalesPerformanceAnalysis';
+import TeleproPerformance from './components/TeleproPerformance';
+import { Lead, CompanyExpense, ClientDiscovery, SocialQuestionnaire } from './types';
 import * as googleService from './services/googleSheetsService';
 import { fetchFacebookAdsPerformance, fetchFacebookCreativesPerformance, FacebookAdsData, FacebookCreativeData } from './services/facebookAdsService';
 import { fetchGoogleAdsPerformance, GoogleAdsData } from './services/googleAdsService';
 
-const SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
+// Ancienne URL pour les leads et dépenses
+const LEADS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrJZso0q9OdL2XTeCT3pLtDh7JqF349JJIAmRcrrLvl1z2XWHIi-78ygIX76SwhIiixw/exec';
+// Nouvelle URL pour les questionnaires (Mise à jour avec l'URL correcte)
+const QUESTIONNAIRE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9QV5ZqVkqrEAC2jB91knBBCsii6CR3Kur9-qolHmpYY6BWvNfR_cJnDPN40ppO-mO7w/exec';
 
 export type AnalysisCategory = 'all' | 'commerce' | 'technique';
 
 const App: React.FC = () => {
-  // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-  // App state
   const [activeTab, setActiveTab] = useState('results');
   const [analysisCategory, setAnalysisCategory] = useState<AnalysisCategory>('all');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [expenses, setExpenses] = useState<CompanyExpense[]>([]);
+  const [discovery, setDiscovery] = useState<ClientDiscovery[]>([]);
+  const [socialQuestionnaire, setSocialQuestionnaire] = useState<SocialQuestionnaire[]>([]);
   const [fbData, setFbData] = useState<FacebookAdsData | null>(null);
   const [googleData, setGoogleData] = useState<GoogleAdsData | null>(null);
   const [creatives, setCreatives] = useState<FacebookCreativeData[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Check authentication on mount
-  useEffect(() => {
-    const token = localStorage.getItem('crm_auth_token');
-    setIsAuthenticated(!!token);
-    setIsCheckingAuth(false);
-  }, []);
 
   const getDefaultDates = () => {
     const now = new Date();
@@ -61,26 +60,37 @@ const App: React.FC = () => {
   const [endDate, setEndDate] = useState(initialDates.end);
 
   useEffect(() => {
+    const token = localStorage.getItem('crm_auth_token');
+    setIsAuthenticated(!!token);
+    setIsCheckingAuth(false);
+  }, []);
+
+  useEffect(() => {
     initApp();
   }, [startDate, endDate]);
 
   const initApp = async () => {
     setIsLoading(true);
     try {
-      const [leadsData, fbPerf, googlePerf, creativesData, expensesData] = await Promise.all([
-        googleService.fetchLeads(SCRIPT_URL),
+      // On utilise les deux URLs distinctes selon le type de données
+      const [leadsData, fbPerf, googlePerf, creativesData, expensesData, discoveryData, socialData] = await Promise.all([
+        googleService.fetchLeads(LEADS_SCRIPT_URL),
         fetchFacebookAdsPerformance(startDate, endDate),
-        fetchGoogleAdsPerformance(SCRIPT_URL, startDate, endDate),
+        fetchGoogleAdsPerformance(LEADS_SCRIPT_URL, startDate, endDate),
         fetchFacebookCreativesPerformance(startDate, endDate),
-        googleService.fetchExpenses(SCRIPT_URL)
+        googleService.fetchExpenses(LEADS_SCRIPT_URL),
+        googleService.fetchDiscovery(QUESTIONNAIRE_SCRIPT_URL),
+        googleService.fetchSocialQuestionnaire(QUESTIONNAIRE_SCRIPT_URL)
       ]);
       setLeads(leadsData);
       setFbData(fbPerf);
       setGoogleData(googlePerf);
       setCreatives(creativesData);
       setExpenses(expensesData);
+      setDiscovery(discoveryData);
+      setSocialQuestionnaire(socialData);
     } catch (error) {
-      console.error('Erreur initialisation:', error);
+      console.error('Erreur initialisation App:', error);
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +100,7 @@ const App: React.FC = () => {
     setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
     if (updatedLead.rowIndex) {
       try {
-        await googleService.updateLead(SCRIPT_URL, updatedLead);
+        await googleService.updateLead(LEADS_SCRIPT_URL, updatedLead);
       } catch (error) {
         console.error("Erreur sync lead:", error);
       }
@@ -102,7 +112,6 @@ const App: React.FC = () => {
     setIsAuthenticated(false);
   };
 
-  // Show login page if not authenticated
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -131,6 +140,10 @@ const App: React.FC = () => {
               </div>
               <h1 className="text-5xl font-bold text-slate-900 tracking-tight whitespace-nowrap">
                 {activeTab === 'results' ? 'Performance Globale' : 
+                 activeTab === 'telepro_perf' ? 'Performance Téléprospection' :
+                 activeTab === 'sales_perf' ? 'Analyse Commerciale' :
+                 activeTab === 'questionnaires' ? 'Questionnaires Clients' :
+                 activeTab === 'appointments' ? 'Agenda Commercial' :
                  activeTab === 'expenses' ? 'Dépenses Hors SEA' :
                  activeTab === 'creatives' ? 'Analyse Créatives' : 
                  activeTab === 'posts' ? 'Flux Natif Rhône Solaire' :
@@ -139,7 +152,6 @@ const App: React.FC = () => {
               </h1>
             </div>
 
-            {/* Sélecteur de Flux (Pills) - Affiché seulement sur Performance Globale */}
             {activeTab === 'results' && !isLoading && (
               <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100 inline-flex space-x-1 mb-1 animate-in fade-in slide-in-from-left-4 duration-500">
                 <button 
@@ -164,15 +176,15 @@ const App: React.FC = () => {
             )}
           </div>
           
-          <div className="flex items-end space-x-4">
+          <div className="flex items-center space-x-4">
             <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100">
-              <DateRangePicker
-                startDate={startDate}
-                endDate={endDate}
+              <DateRangePicker 
+                startDate={startDate} 
+                endDate={endDate} 
                 onRangeChange={(s, e) => {
                   setStartDate(s);
                   setEndDate(e);
-                }}
+                }} 
               />
             </div>
           </div>
@@ -195,6 +207,32 @@ const App: React.FC = () => {
                   gData={googleData} 
                   companyExpenses={expenses} 
                   category={analysisCategory}
+                />
+              )}
+              {activeTab === 'telepro_perf' && (
+                <TeleproPerformance 
+                  leads={leads}
+                  startDate={startDate}
+                  endDate={endDate}
+                />
+              )}
+              {activeTab === 'sales_perf' && (
+                <SalesPerformanceAnalysis 
+                  leads={leads}
+                  startDate={startDate}
+                  endDate={endDate}
+                />
+              )}
+              {activeTab === 'questionnaires' && (
+                <QuestionnaireView 
+                  discovery={discovery}
+                  social={socialQuestionnaire}
+                />
+              )}
+              {activeTab === 'appointments' && (
+                <AppointmentCalendar 
+                  leads={leads}
+                  onSelectLead={setSelectedLead}
                 />
               )}
               {activeTab === 'expenses' && <ExpenseAnalysis expenses={expenses} leads={leads} startDate={startDate} endDate={endDate} />}
