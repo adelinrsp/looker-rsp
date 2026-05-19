@@ -165,11 +165,19 @@ const QuestionnaireView: React.FC<QuestionnaireViewProps> = ({ discovery, social
   const [sortCol, setSortCol] = useState('Date');
   const [sortAsc, setSortAsc] = useState(false);
 
-  // Safe data
-  const safeDiscovery = useMemo(() =>
-    Array.isArray(discovery) ? discovery.filter(d => d && Object.keys(d).length > 2) : [],
-    [discovery]
-  );
+  // Safe data — normalize field names that may differ by casing between sheets
+  const safeDiscovery = useMemo(() => {
+    if (!Array.isArray(discovery)) return [];
+    return discovery
+      .filter(d => d && Object.keys(d).length > 2)
+      .map((d: any) => ({
+        ...d,
+        // 'Commercial' can come as lowercase 'commercial' or other variants
+        Commercial: d.Commercial || d.commercial || d['Nom du commercial'] || d['nom_commercial'] || '',
+        // 'Date' can come as 'Horodateur' in some sheet configs
+        Date: d.Date || d.date || d.Horodateur || d.horodateur || '',
+      }));
+  }, [discovery]);
   const safeSocial = useMemo(() =>
     Array.isArray(social) ? social.filter(s => s && Object.keys(s).length > 2) : [],
     [social]
@@ -493,18 +501,14 @@ const QuestionnaireView: React.FC<QuestionnaireViewProps> = ({ discovery, social
               {/* Commercial */}
               <Card>
                 <CardTitle>Répartition par commercial</CardTitle>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={commercialData} layout="vertical" margin={{ left: 0, right: 30, top: 4, bottom: 4 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 9, fontWeight: 700 }} width={90} />
-                      <Tooltip contentStyle={{ borderRadius: 10, border: 'none', fontSize: 12 }} />
-                      <Bar dataKey="value" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={18} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                {commercialData.length > 0 ? (
+                  <BarItems
+                    entries={commercialData.map(d => [d.name, d.value] as [string, number])}
+                    max={filtered.length}
+                  />
+                ) : (
+                  <p className="text-xs text-slate-400 italic mt-4">Aucune donnée commerciale trouvée.</p>
+                )}
               </Card>
             </div>
 
