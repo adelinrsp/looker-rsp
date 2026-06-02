@@ -13,6 +13,7 @@ interface MonthlyAnalysisProps {
   fbData?: FacebookAdsData | null;
   googleData?: GoogleAdsData | null;
   scriptUrl?: string;
+  sourceFilters?: string[];
 }
 
 interface MonthData {
@@ -51,18 +52,27 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
   fbData,
   googleData,
   scriptUrl = '',
+  sourceFilters = [],
 }) => {
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
   const [monthlyAdSpend, setMonthlyAdSpend] = useState<Record<string, MonthlyAdSpend>>({});
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
+  // Filtre catégorie uniquement — utilisé pour le fetch des budgets ads (indépendant des sources)
   const filterByCategory = (leadsToFilter: Lead[]): Lead[] =>
     leadsToFilter.filter(l => {
       const isTech = l.status === 'Opportunité Service Technique';
-      if (category === 'commerce') return !isTech;
-      if (category === 'technique') return isTech;
+      if (category === 'commerce' && isTech) return false;
+      if (category === 'technique' && !isTech) return false;
       return true;
+    });
+
+  // Filtre catégorie + sources — utilisé pour l'affichage des métriques
+  const filterByCategoryAndSource = (leadsToFilter: Lead[]): Lead[] =>
+    filterByCategory(leadsToFilter).filter(l => {
+      if (sourceFilters.length === 0) return true;
+      return sourceFilters.includes(l.source || '');
     });
 
   const dateToNum = (dateVal: any): number => {
@@ -113,6 +123,22 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
     return `${months[parseInt(month) - 1]} ${year}`;
   };
 
+  // ─── Liste des mois présents (sans filtre source) — pour le fetch ads ────────
+
+  const monthsForAdFetch = useMemo((): string[] => {
+    const sLimit = dateToNum(startDate);
+    const eLimit = dateToNum(endDate);
+    const set = new Set<string>();
+    filterByCategory(leads).forEach(lead => {
+      const leadDate = dateToNum(lead.dateEntry);
+      if (leadDate < sLimit || leadDate > eLimit) return;
+      const my = extractMonthYear(lead.dateEntry);
+      if (my) set.add(my);
+    });
+    return Array.from(set).sort();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leads, startDate, endDate, category]); // PAS sourceFilters ici intentionnellement
+
   // ─── Données mensuelles issues des leads ─────────────────────────────────────
 
   const monthlyData = useMemo((): MonthData[] => {
@@ -120,7 +146,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
     const eLimit = dateToNum(endDate);
     const monthMap: Record<string, MonthData> = {};
 
-    filterByCategory(leads).forEach(lead => {
+    filterByCategoryAndSource(leads).forEach(lead => {
       const leadDate = dateToNum(lead.dateEntry);
       if (leadDate < sLimit || leadDate > eLimit) return;
       const monthYear = extractMonthYear(lead.dateEntry);
@@ -159,21 +185,32 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
     });
 
     return Object.values(monthMap).sort((a, b) => a.monthYear.localeCompare(b.monthYear));
-  }, [leads, startDate, endDate, category, expenses]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leads, startDate, endDate, category, expenses, sourceFilters]);
 
   // ─── Fetch Ads par mois ──────────────────────────────────────────────────────
 
+  // Fetch ads uniquement quand la liste des mois change (date/catégorie) — PAS sur sourceFilters
   useEffect(() => {
-    if (monthlyData.length === 0) return;
+    if (monthsForAdFetch.length === 0) return;
 
-    // Initialise loading pour chaque mois
-    const initState: Record<string, MonthlyAdSpend> = {};
-    monthlyData.forEach(m => { initState[m.monthYear] = { fbSpend: 0, googleSpend: 0, loading: true }; });
-    setMonthlyAdSpend(initState);
+    // Initialise loading uniquement pour les mois pas encore chargés
+    setMonthlyAdSpend(prev => {
+      const next = { ...prev };
+      monthsForAdFetch.forEach(my => {
+        if (!next[my]) next[my] = { fbSpend: 0, googleSpend: 0, loading: true };
+      });
+      return next;
+    });
 
-    // Fetch en parallèle
-    monthlyData.forEach(async (m) => {
-      const [year, month] = m.monthYear.split('-');
+    // Fetch en parallèle uniquement les mois non encore chargés
+    monthsForAdFetch.forEach(async (my) => {
+      setMonthlyAdSpend(prev => {
+        if (prev[my] && !prev[my].loading) return prev; // déjà chargé, rien à faire
+        return prev;
+      });
+
+      const [year, month] = my.split('-');
       const since = `${year}-${month}-01`;
       const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
       const until = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
@@ -188,10 +225,10 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
 
       setMonthlyAdSpend(prev => ({
         ...prev,
-        [m.monthYear]: { fbSpend, googleSpend, loading: false },
+        [my]: { fbSpend, googleSpend, loading: false },
       }));
     });
-  }, [monthlyData, scriptUrl]);
+  }, [monthsForAdFetch, scriptUrl]);
 
   // ─── Données sources par mois ────────────────────────────────────────────────
 
@@ -200,7 +237,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
     const eLimit = dateToNum(endDate);
     const sourceMap: Record<string, SourceData> = {};
 
-    filterByCategory(leads).forEach(lead => {
+    filterByCategoryAndSource(leads).forEach(lead => {
       const leadDate = dateToNum(lead.dateEntry);
       if (extractMonthYear(lead.dateEntry) !== monthYear || leadDate < sLimit || leadDate > eLimit) return;
       const source = lead.source || 'Non renseigné';
@@ -361,6 +398,21 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                         <p className="text-sm font-black text-violet-700 tabular-nums">{fmtCost(monthSpend, month.salesCount)}</p>
                       )}
                     </div>
+                  </div>
+
+                  {/* Séparateur */}
+                  <div className="w-px h-10 bg-slate-100 flex-shrink-0"></div>
+
+                  {/* Budget SEA */}
+                  <div className="bg-sky-50 rounded-xl px-3 py-2 text-center w-28 flex-shrink-0">
+                    <p className="text-[8px] font-black text-sky-400 uppercase tracking-widest mb-0.5">Budget SEA</p>
+                    {isLoading ? (
+                      <div className="h-4 w-16 bg-sky-100 animate-pulse rounded mx-auto mt-1"></div>
+                    ) : (
+                      <p className="text-sm font-black text-sky-700 tabular-nums">
+                        {fmt((ads?.fbSpend || 0) + (ads?.googleSpend || 0))} €
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

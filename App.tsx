@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar';
 import ResultsAnalysis from './components/ResultsAnalysis';
@@ -44,6 +44,31 @@ const App: React.FC = () => {
   const [editorialEvents, setEditorialEvents] = useState<EditorialEvent[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sourceFilters, setSourceFilters] = useState<string[]>([]);
+  const [sourceFilterOpen, setSourceFilterOpen] = useState(false);
+  const sourceFilterRef = useRef<HTMLDivElement>(null);
+
+  // Ferme le dropdown si clic à l'extérieur
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (sourceFilterRef.current && !sourceFilterRef.current.contains(e.target as Node)) {
+        setSourceFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const uniqueSources = useMemo(() =>
+    Array.from(new Set(leads.map(l => l.source).filter(Boolean))).sort(),
+    [leads]
+  );
+
+  const toggleSource = (src: string) => {
+    setSourceFilters(prev =>
+      prev.includes(src) ? prev.filter(s => s !== src) : [...prev, src]
+    );
+  };
 
   const getDefaultDates = () => {
     const now = new Date();
@@ -195,15 +220,70 @@ const App: React.FC = () => {
             )}
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            {/* Filtre Origine — visible uniquement sur Analyse Mensuelle */}
+            {activeTab === 'monthly' && !isLoading && (
+              <div className="relative" ref={sourceFilterRef}>
+                <button
+                  onClick={() => setSourceFilterOpen(o => !o)}
+                  className="flex items-center gap-2 bg-white px-4 py-3 rounded-2xl shadow-sm border border-slate-100 hover:border-amber-300 transition-colors"
+                >
+                  <i className="fas fa-filter text-amber-500 text-xs"></i>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+                    {sourceFilters.length === 0
+                      ? 'Toutes origines'
+                      : `${sourceFilters.length} origine${sourceFilters.length > 1 ? 's' : ''}`}
+                  </span>
+                  <i className={`fas fa-chevron-down text-slate-300 text-[8px] transition-transform ${sourceFilterOpen ? 'rotate-180' : ''}`}></i>
+                </button>
+
+                {sourceFilterOpen && (
+                  <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 min-w-[200px]">
+                    {/* Tout sélectionner / désélectionner */}
+                    <button
+                      onClick={() => setSourceFilters([])}
+                      className={`w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-2.5 ${
+                        sourceFilters.length === 0 ? 'text-amber-600' : 'text-slate-400 hover:text-slate-700'
+                      }`}
+                    >
+                      <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                        sourceFilters.length === 0 ? 'bg-amber-500 border-amber-500' : 'border-slate-300'
+                      }`}>
+                        {sourceFilters.length === 0 && <i className="fas fa-check text-white text-[7px]"></i>}
+                      </div>
+                      Toutes origines
+                    </button>
+                    <div className="my-1.5 border-t border-slate-100"></div>
+                    {uniqueSources.map(src => (
+                      <button
+                        key={src}
+                        onClick={() => toggleSource(src)}
+                        className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors flex items-center gap-2.5 ${
+                          sourceFilters.includes(src)
+                            ? 'text-amber-700 bg-amber-50'
+                            : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                          sourceFilters.includes(src) ? 'bg-amber-500 border-amber-500' : 'border-slate-300'
+                        }`}>
+                          {sourceFilters.includes(src) && <i className="fas fa-check text-white text-[7px]"></i>}
+                        </div>
+                        {src}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100">
-              <DateRangePicker 
-                startDate={startDate} 
-                endDate={endDate} 
+              <DateRangePicker
+                startDate={startDate}
+                endDate={endDate}
                 onRangeChange={(s, e) => {
                   setStartDate(s);
                   setEndDate(e);
-                }} 
+                }}
               />
             </div>
           </div>
@@ -253,6 +333,7 @@ const App: React.FC = () => {
                   fbData={fbData}
                   googleData={googleData}
                   scriptUrl={LEADS_SCRIPT_URL}
+                  sourceFilters={sourceFilters}
                 />
               )}
               {activeTab === 'questionnaires' && (
