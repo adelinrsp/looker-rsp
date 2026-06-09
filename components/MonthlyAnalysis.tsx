@@ -512,11 +512,11 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
             {totals.appointmentsCount > 0 ? ((totals.salesCount / totals.appointmentsCount) * 100).toFixed(1) : '0'}% closing
           </p>
         </div>
-        <div className="bg-amber-50 p-5 rounded-[20px] border border-amber-100 shadow-sm">
-          <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest mb-1">CA Total</p>
-          <p className="text-3xl font-black text-amber-700 tabular-nums">{(totals.revenue / 1000).toFixed(0)}k€</p>
-          <p className="text-[9px] text-amber-400 mt-1">
-            {totals.salesCount > 0 ? fmt(totals.revenue / totals.salesCount) : '0'}€ / vente
+        <div className="bg-violet-50 p-5 rounded-[20px] border border-violet-100 shadow-sm">
+          <p className="text-[9px] font-black text-violet-400 uppercase tracking-widest mb-1">CP Vente</p>
+          <p className="text-3xl font-black text-violet-700 tabular-nums">{fmtCost(totalSpend, totals.salesCount)}</p>
+          <p className="text-[9px] text-violet-400 mt-1">
+            Budget total : {fmt(totalSpend)} €
           </p>
         </div>
       </div>
