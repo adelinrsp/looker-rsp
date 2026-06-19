@@ -29,6 +29,11 @@ const SALESPERSONS = [
     id: 'JEAN CHRISTOPHE',
     name: 'Jean Christophe',
     photo: 'https://www.rhonesolairepro.com/wp-content/uploads/2026/03/Generated-Image-March-03-2026-11_21AM.jpg.jpeg'
+  },
+  {
+    id: 'VINCENT',
+    name: 'Vincent',
+    photo: 'https://www.rhonesolairepro.com/wp-content/uploads/2026/06/20260619_144256-scaled.jpg'
   }
 ];
 
@@ -170,12 +175,12 @@ const SalesPerformanceAnalysis: React.FC<SalesPerformanceAnalysisProps> = ({ lea
         </div>
 
         {viewMode === 'individual' && (
-          <div className="flex space-x-3">
+          <div className="flex flex-nowrap items-center space-x-3 overflow-x-auto max-w-full">
             {SALESPERSONS.map(sp => (
               <button
                 key={sp.id}
                 onClick={() => setSelectedIndividual(sp.id)}
-                className={`flex items-center space-x-3 px-4 py-2 rounded-2xl border transition-all ${
+                className={`flex items-center space-x-3 px-4 py-2 rounded-2xl border transition-all shrink-0 ${
                   selectedIndividual === sp.id 
                     ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/20' 
                     : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
@@ -191,7 +196,7 @@ const SalesPerformanceAnalysis: React.FC<SalesPerformanceAnalysisProps> = ({ lea
 
       {viewMode === 'team' ? (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             {performanceData.sort((a, b) => b.conversionRate - a.conversionRate).map((sp, idx) => (
               <div key={sp.id} className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">

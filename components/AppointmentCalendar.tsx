@@ -7,12 +7,13 @@ interface AppointmentCalendarProps {
   onSelectLead: (lead: Lead) => void;
 }
 
-const ALLOWED_SALESPERSONS = ['PIERRE', 'MORGAN', 'LAURENT'];
+const ALLOWED_SALESPERSONS = ['PIERRE', 'MORGAN', 'LAURENT', 'VINCENT'];
 
 const SALESPERSON_COLORS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
   'PIERRE': { bg: 'bg-blue-50/50', text: 'text-blue-700', border: 'border-blue-100', dot: 'bg-blue-500' },
   'MORGAN': { bg: 'bg-amber-50/50', text: 'text-amber-700', border: 'border-amber-100', dot: 'bg-amber-500' },
   'LAURENT': { bg: 'bg-emerald-50/50', text: 'text-emerald-700', border: 'border-emerald-100', dot: 'bg-emerald-500' },
+  'VINCENT': { bg: 'bg-purple-50/50', text: 'text-purple-700', border: 'border-purple-100', dot: 'bg-purple-500' },
   'default': { bg: 'bg-slate-50/50', text: 'text-slate-700', border: 'border-slate-200', dot: 'bg-slate-400' }
 };
 
