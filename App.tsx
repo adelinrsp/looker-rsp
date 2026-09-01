@@ -33,6 +33,7 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState('results');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [analysisCategory, setAnalysisCategory] = useState<AnalysisCategory>('all');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [expenses, setExpenses] = useState<CompanyExpense[]>([]);
@@ -172,9 +173,15 @@ const App: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
-      
-      <main className="flex-1 ml-64 p-8 xl:p-12">
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onLogout={handleLogout}
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(v => !v)}
+      />
+
+      <main className={`flex-1 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} p-8 xl:p-12 transition-all duration-300`}>
         <header className="flex items-center justify-between mb-12">
           <div className="flex items-end space-x-10">
             <div>

@@ -56,6 +56,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
 }) => {
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
   const [monthlyAdSpend, setMonthlyAdSpend] = useState<Record<string, MonthlyAdSpend>>({});
+  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -261,6 +262,42 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
     return Object.values(sourceMap).sort((a, b) => b.leadsCount - a.leadsCount);
   };
 
+  // ─── Données pour la vue détaillée ──────────────────────────────────────────
+
+  const detailedData = useMemo(() => {
+    const sLimit = dateToNum(startDate);
+    const eLimit = dateToNum(endDate);
+    const sourceSet = new Set<string>();
+    const monthSourceMap: Record<string, Record<string, { leads: number; rdv: number; ventes: number }>> = {};
+
+    filterByCategoryAndSource(leads).forEach(lead => {
+      const leadDate = dateToNum(lead.dateEntry);
+      if (leadDate < sLimit || leadDate > eLimit) return;
+      const my = extractMonthYear(lead.dateEntry);
+      if (!my) return;
+      const src = lead.source || 'Autre';
+
+      sourceSet.add(src);
+      if (!monthSourceMap[my]) monthSourceMap[my] = {};
+      if (!monthSourceMap[my][src]) monthSourceMap[my][src] = { leads: 0, rdv: 0, ventes: 0 };
+
+      const d = monthSourceMap[my][src];
+      d.leads += 1;
+      if (['RDV Fixé', 'Opportunité Commerce', 'Parrainage'].includes(lead.status)) d.rdv += 1;
+      if (['Vendu', 'Installé'].includes(lead.salesStatus || '')) d.ventes += 1;
+    });
+
+    // Sources triées : SEA en premier, puis alphabétique
+    const sources = Array.from(sourceSet).sort((a, b) => {
+      if (a === 'SEA') return -1;
+      if (b === 'SEA') return 1;
+      return a.localeCompare(b, 'fr');
+    });
+
+    return { sources, monthSourceMap };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leads, startDate, endDate, category, sourceFilters]);
+
   // ─── Totaux ──────────────────────────────────────────────────────────────────
 
   const totals = useMemo(() => ({
@@ -275,6 +312,8 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
   const expensesTotal = monthlyData.reduce((s, m) => s + m.expensesTotal, 0);
   const totalSpend = fbSpendTotal + googleSpendTotal + expensesTotal;
 
+  const { sources: detailedSources, monthSourceMap } = detailedData;
+
   // ─── Rendu ───────────────────────────────────────────────────────────────────
 
   if (monthlyData.length === 0) {
@@ -287,6 +326,34 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
 
   return (
     <div className="space-y-6 animate-fade-in">
+
+      {/* Switch vue Simplifiée / Détaillée */}
+      <div className="flex justify-end">
+        <div className="flex items-center bg-slate-100 rounded-xl p-1 gap-1">
+          <button
+            onClick={() => setViewMode('simple')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all ${
+              viewMode === 'simple'
+                ? 'bg-white text-amber-600 shadow-sm'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <i className="fas fa-list text-[10px]"></i>
+            Simplifiée
+          </button>
+          <button
+            onClick={() => setViewMode('detailed')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all ${
+              viewMode === 'detailed'
+                ? 'bg-white text-amber-600 shadow-sm'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <i className="fas fa-table text-[10px]"></i>
+            Détaillée
+          </button>
+        </div>
+      </div>
 
       {/* Bandeau dépenses globales période */}
       <div className="grid grid-cols-3 gap-4">
@@ -319,7 +386,112 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
         </div>
       </div>
 
-      {/* Lignes mensuelles */}
+      {/* Vue détaillée — tableau croisé mois × sources */}
+      {viewMode === 'detailed' && (
+          <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm w-full overflow-hidden">
+            <div className="overflow-x-auto w-full">
+              <table className="text-xs border-collapse w-full min-w-max">
+                <thead>
+                  {/* Ligne 1 : groupes */}
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-4 py-3 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-10 min-w-[90px]" rowSpan={2}>
+                      Mois
+                    </th>
+                    <th
+                      colSpan={detailedSources.length}
+                      className="px-4 py-2 text-center text-[9px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200 bg-slate-100"
+                    >
+                      <i className="fas fa-users mr-1 text-slate-400"></i>Leads
+                    </th>
+                    <th
+                      colSpan={detailedSources.length}
+                      className="px-4 py-2 text-center text-[9px] font-black text-blue-600 uppercase tracking-widest border-l border-blue-100 bg-blue-50"
+                    >
+                      <i className="fas fa-calendar-check mr-1 text-blue-400"></i>RDV
+                    </th>
+                    <th
+                      colSpan={detailedSources.length}
+                      className="px-4 py-2 text-center text-[9px] font-black text-emerald-600 uppercase tracking-widest border-l border-emerald-100 bg-emerald-50"
+                    >
+                      <i className="fas fa-check-circle mr-1 text-emerald-400"></i>Ventes
+                    </th>
+                    <th className="px-4 py-2 text-center text-[9px] font-black text-sky-600 uppercase tracking-widest border-l border-sky-100 bg-sky-50" rowSpan={2}>
+                      Budget<br/>SEA
+                    </th>
+                  </tr>
+                  {/* Ligne 2 : sous-colonnes sources */}
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    {/* Leads sources */}
+                    {detailedSources.map((src, i) => (
+                      <th key={`l-${src}`} className={`px-3 py-2 text-center text-[8px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap ${i === 0 ? 'border-l border-slate-200' : ''}`}>
+                        {src}
+                      </th>
+                    ))}
+                    {/* RDV sources */}
+                    {detailedSources.map((src, i) => (
+                      <th key={`r-${src}`} className={`px-3 py-2 text-center text-[8px] font-black text-blue-400 uppercase tracking-widest whitespace-nowrap ${i === 0 ? 'border-l border-blue-100' : ''}`}>
+                        {src}
+                      </th>
+                    ))}
+                    {/* Ventes sources */}
+                    {detailedSources.map((src, i) => (
+                      <th key={`v-${src}`} className={`px-3 py-2 text-center text-[8px] font-black text-emerald-400 uppercase tracking-widest whitespace-nowrap ${i === 0 ? 'border-l border-emerald-100' : ''}`}>
+                        {src}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthlyData.map((month, rowIdx) => {
+                    const ads = monthlyAdSpend[month.monthYear];
+                    const isLoading = ads?.loading ?? true;
+                    const seaSpend = (ads?.fbSpend || 0) + (ads?.googleSpend || 0);
+                    const srcMap = monthSourceMap[month.monthYear] || {};
+                    return (
+                      <tr
+                        key={month.monthYear}
+                        className={`border-b border-slate-50 hover:bg-amber-50/30 transition-colors ${rowIdx % 2 !== 0 ? 'bg-slate-50/40' : 'bg-white'}`}
+                      >
+                        <td className="px-4 py-3 font-black text-slate-900 whitespace-nowrap sticky left-0 bg-inherit z-10">
+                          {formatMonthLabel(month.monthYear)}
+                        </td>
+                        {/* Leads par source */}
+                        {detailedSources.map((src, i) => (
+                          <td key={`l-${src}`} className={`px-3 py-3 text-center tabular-nums font-bold text-slate-700 ${i === 0 ? 'border-l border-slate-100' : ''}`}>
+                            {srcMap[src]?.leads ?? 0}
+                          </td>
+                        ))}
+                        {/* RDV par source */}
+                        {detailedSources.map((src, i) => (
+                          <td key={`r-${src}`} className={`px-3 py-3 text-center tabular-nums font-bold text-blue-600 ${i === 0 ? 'border-l border-blue-50' : ''}`}>
+                            {srcMap[src]?.rdv ?? 0}
+                          </td>
+                        ))}
+                        {/* Ventes par source */}
+                        {detailedSources.map((src, i) => (
+                          <td key={`v-${src}`} className={`px-3 py-3 text-center tabular-nums font-bold text-emerald-600 ${i === 0 ? 'border-l border-emerald-50' : ''}`}>
+                            {srcMap[src]?.ventes ?? 0}
+                          </td>
+                        ))}
+                        {/* Budget SEA */}
+                        <td className="px-4 py-3 text-center tabular-nums font-black text-sky-700 border-l border-sky-50 whitespace-nowrap">
+                          {isLoading ? (
+                            <span className="inline-block h-3 w-14 bg-sky-100 animate-pulse rounded"></span>
+                          ) : (
+                            `${fmt(seaSpend)} €`
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+      )}
+
+      {/* Vue simplifiée — Lignes mensuelles */}
+      {viewMode === 'simple' && (
       <div className="space-y-3">
         {monthlyData.map((month) => {
           const ads = monthlyAdSpend[month.monthYear];
@@ -490,6 +662,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
           );
         })}
       </div>
+      )}
 
       {/* Totaux */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2 border-t border-slate-100">

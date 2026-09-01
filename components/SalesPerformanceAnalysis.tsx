@@ -28,7 +28,7 @@ const SALESPERSONS = [
   {
     id: 'JEAN CHRISTOPHE',
     name: 'Jean Christophe',
-    photo: 'https://www.rhonesolairepro.com/wp-content/uploads/2026/03/Generated-Image-March-03-2026-11_21AM.jpg.jpeg'
+    photo: '/photos/jean-christophe.jpeg'
   },
   {
     id: 'VINCENT',
@@ -175,7 +175,7 @@ const SalesPerformanceAnalysis: React.FC<SalesPerformanceAnalysisProps> = ({ lea
         </div>
 
         {viewMode === 'individual' && (
-          <div className="flex flex-nowrap items-center space-x-3 overflow-x-auto max-w-full">
+          <div className="flex flex-nowrap items-center space-x-2 overflow-x-auto max-w-full">
             {SALESPERSONS.map(sp => (
               <button
                 key={sp.id}
@@ -196,7 +196,7 @@ const SalesPerformanceAnalysis: React.FC<SalesPerformanceAnalysisProps> = ({ lea
 
       {viewMode === 'team' ? (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             {performanceData.sort((a, b) => b.conversionRate - a.conversionRate).map((sp, idx) => (
               <div key={sp.id} className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
