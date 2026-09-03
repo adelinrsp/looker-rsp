@@ -392,52 +392,34 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
             <div className="overflow-x-auto w-full">
               <table className="text-xs border-collapse w-full min-w-max">
                 <thead>
-                  {/* Ligne 1 : groupes */}
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-4 py-3 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-10 min-w-[90px]" rowSpan={2}>
+                  {/* Ligne 1 : groupes par source */}
+                  <tr className="border-b border-slate-200">
+                    <th className="px-4 py-3 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-10 min-w-[100px]" rowSpan={2}>
                       Mois
                     </th>
-                    <th
-                      colSpan={detailedSources.length}
-                      className="px-4 py-2 text-center text-[9px] font-black text-slate-600 uppercase tracking-widest border-l border-slate-200 bg-slate-100"
-                    >
-                      <i className="fas fa-users mr-1 text-slate-400"></i>Leads
-                    </th>
-                    <th
-                      colSpan={detailedSources.length}
-                      className="px-4 py-2 text-center text-[9px] font-black text-blue-600 uppercase tracking-widest border-l border-blue-100 bg-blue-50"
-                    >
-                      <i className="fas fa-calendar-check mr-1 text-blue-400"></i>RDV
-                    </th>
-                    <th
-                      colSpan={detailedSources.length}
-                      className="px-4 py-2 text-center text-[9px] font-black text-emerald-600 uppercase tracking-widest border-l border-emerald-100 bg-emerald-50"
-                    >
-                      <i className="fas fa-check-circle mr-1 text-emerald-400"></i>Ventes
-                    </th>
-                    <th className="px-4 py-2 text-center text-[9px] font-black text-sky-600 uppercase tracking-widest border-l border-sky-100 bg-sky-50" rowSpan={2}>
+                    {detailedSources.map((src, i) => (
+                      <th
+                        key={`grp-${src}`}
+                        colSpan={5}
+                        className={`px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest border-l border-slate-200 ${i % 2 === 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-600'}`}
+                      >
+                        {src}
+                      </th>
+                    ))}
+                    <th className="px-4 py-2 text-center text-[9px] font-black text-sky-600 uppercase tracking-widest border-l border-sky-100 bg-sky-50 whitespace-nowrap" rowSpan={2}>
                       Budget<br/>SEA
                     </th>
                   </tr>
-                  {/* Ligne 2 : sous-colonnes sources */}
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    {/* Leads sources */}
-                    {detailedSources.map((src, i) => (
-                      <th key={`l-${src}`} className={`px-3 py-2 text-center text-[8px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap ${i === 0 ? 'border-l border-slate-200' : ''}`}>
-                        {src}
-                      </th>
-                    ))}
-                    {/* RDV sources */}
-                    {detailedSources.map((src, i) => (
-                      <th key={`r-${src}`} className={`px-3 py-2 text-center text-[8px] font-black text-blue-400 uppercase tracking-widest whitespace-nowrap ${i === 0 ? 'border-l border-blue-100' : ''}`}>
-                        {src}
-                      </th>
-                    ))}
-                    {/* Ventes sources */}
-                    {detailedSources.map((src, i) => (
-                      <th key={`v-${src}`} className={`px-3 py-2 text-center text-[8px] font-black text-emerald-400 uppercase tracking-widest whitespace-nowrap ${i === 0 ? 'border-l border-emerald-100' : ''}`}>
-                        {src}
-                      </th>
+                  {/* Ligne 2 : sous-colonnes Leads / %RDV / RDV / %Closing / Ventes */}
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    {detailedSources.map((src) => (
+                      <React.Fragment key={`sub-${src}`}>
+                        <th className="px-3 py-2 text-center text-[8px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap border-l border-slate-200">Leads</th>
+                        <th className="px-3 py-2 text-center text-[8px] font-black text-blue-300 uppercase tracking-widest whitespace-nowrap">%RDV</th>
+                        <th className="px-3 py-2 text-center text-[8px] font-black text-blue-500 uppercase tracking-widest whitespace-nowrap">RDV</th>
+                        <th className="px-3 py-2 text-center text-[8px] font-black text-emerald-300 uppercase tracking-widest whitespace-nowrap">%Close</th>
+                        <th className="px-3 py-2 text-center text-[8px] font-black text-emerald-500 uppercase tracking-widest whitespace-nowrap">Ventes</th>
+                      </React.Fragment>
                     ))}
                   </tr>
                 </thead>
@@ -455,24 +437,20 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                         <td className="px-4 py-3 font-black text-slate-900 whitespace-nowrap sticky left-0 bg-inherit z-10">
                           {formatMonthLabel(month.monthYear)}
                         </td>
-                        {/* Leads par source */}
-                        {detailedSources.map((src, i) => (
-                          <td key={`l-${src}`} className={`px-3 py-3 text-center tabular-nums font-bold text-slate-700 ${i === 0 ? 'border-l border-slate-100' : ''}`}>
-                            {srcMap[src]?.leads ?? 0}
-                          </td>
-                        ))}
-                        {/* RDV par source */}
-                        {detailedSources.map((src, i) => (
-                          <td key={`r-${src}`} className={`px-3 py-3 text-center tabular-nums font-bold text-blue-600 ${i === 0 ? 'border-l border-blue-50' : ''}`}>
-                            {srcMap[src]?.rdv ?? 0}
-                          </td>
-                        ))}
-                        {/* Ventes par source */}
-                        {detailedSources.map((src, i) => (
-                          <td key={`v-${src}`} className={`px-3 py-3 text-center tabular-nums font-bold text-emerald-600 ${i === 0 ? 'border-l border-emerald-50' : ''}`}>
-                            {srcMap[src]?.ventes ?? 0}
-                          </td>
-                        ))}
+                        {detailedSources.map((src) => {
+                          const d = srcMap[src] || { leads: 0, rdv: 0, ventes: 0 };
+                          const txRdv = d.leads > 0 ? Math.round(d.rdv / d.leads * 100) : 0;
+                          const txClose = d.rdv > 0 ? Math.round(d.ventes / d.rdv * 100) : 0;
+                          return (
+                            <React.Fragment key={`row-${src}`}>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-700 border-l border-slate-100">{d.leads}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-blue-300">{txRdv}%</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-blue-600">{d.rdv}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-300">{txClose}%</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-600">{d.ventes}</td>
+                            </React.Fragment>
+                          );
+                        })}
                         {/* Budget SEA */}
                         <td className="px-4 py-3 text-center tabular-nums font-black text-sky-700 border-l border-sky-50 whitespace-nowrap">
                           {isLoading ? (
