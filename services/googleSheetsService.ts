@@ -1,7 +1,7 @@
 
 import { Lead, CompanyExpense, ClientDiscovery, SocialQuestionnaire, EditorialEvent } from '../types';
 
-const PLANNING_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymXU08HhFDSBxmKfDsgu38HEY-F8vLoOrY-IiXFkq_Ps4IDF4kYnybt0sC_RDEvLWrxw/exec';
+const PLANNING_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws6mv6wn5dhQP-vsukyZZayydNxilFK8y_ulblTgLMV6snjZJJtXgfzzJ-UIJd-14XcQ/exec';
 
 /**
  * Fonction générique pour effectuer un fetch sur Google Apps Script.

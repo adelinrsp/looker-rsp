@@ -22,10 +22,9 @@ import * as googleService from './services/googleSheetsService';
 import { fetchFacebookAdsPerformance, fetchFacebookCreativesPerformance, FacebookAdsData, FacebookCreativeData } from './services/facebookAdsService';
 import { fetchGoogleAdsPerformance, GoogleAdsData } from './services/googleAdsService';
 
-// Ancienne URL pour les leads et dépenses
-const LEADS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrJZso0q9OdL2XTeCT3pLtDh7JqF349JJIAmRcrrLvl1z2XWHIi-78ygIX76SwhIiixw/exec';
-// Nouvelle URL pour les questionnaires (Mise à jour avec l'URL correcte)
-const QUESTIONNAIRE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9QV5ZqVkqrEAC2jB91knBBCsii6CR3Kur9-qolHmpYY6BWvNfR_cJnDPN40ppO-mO7w/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws6mv6wn5dhQP-vsukyZZayydNxilFK8y_ulblTgLMV6snjZJJtXgfzzJ-UIJd-14XcQ/exec';
+const LEADS_SCRIPT_URL = SCRIPT_URL;
+const QUESTIONNAIRE_SCRIPT_URL = SCRIPT_URL;
 
 export type AnalysisCategory = 'all' | 'commerce' | 'technique';
 
