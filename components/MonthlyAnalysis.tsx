@@ -120,7 +120,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
 
   const formatMonthLabel = (monthYear: string): string => {
     const [year, month] = monthYear.split('-');
-    const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     return `${months[parseInt(month) - 1]} ${year}`;
   };
 
@@ -268,7 +268,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
     const sLimit = dateToNum(startDate);
     const eLimit = dateToNum(endDate);
     const sourceSet = new Set<string>();
-    const monthSourceMap: Record<string, Record<string, { leads: number; rdv: number; ventes: number }>> = {};
+    const monthSourceMap: Record<string, Record<string, { leads: number; rdv: number; ventes: number; ca: number }>> = {};
 
     filterByCategoryAndSource(leads).forEach(lead => {
       const leadDate = dateToNum(lead.dateEntry);
@@ -279,12 +279,15 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
 
       sourceSet.add(src);
       if (!monthSourceMap[my]) monthSourceMap[my] = {};
-      if (!monthSourceMap[my][src]) monthSourceMap[my][src] = { leads: 0, rdv: 0, ventes: 0 };
+      if (!monthSourceMap[my][src]) monthSourceMap[my][src] = { leads: 0, rdv: 0, ventes: 0, ca: 0 };
 
       const d = monthSourceMap[my][src];
       d.leads += 1;
       if (['RDV Fixé', 'Opportunité Commerce', 'Parrainage'].includes(lead.status)) d.rdv += 1;
-      if (['Vendu', 'Installé'].includes(lead.salesStatus || '')) d.ventes += 1;
+      if (['Vendu', 'Installé'].includes(lead.salesStatus || '')) {
+        d.ventes += 1;
+        d.ca += Number(lead.amount) || 0;
+      }
     });
 
     // Sources triées : SEA en premier, puis alphabétique
@@ -400,12 +403,15 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                     {detailedSources.map((src, i) => (
                       <th
                         key={`grp-${src}`}
-                        colSpan={5}
+                        colSpan={6}
                         className={`px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest border-l border-slate-200 ${i % 2 === 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-600'}`}
                       >
                         {src}
                       </th>
                     ))}
+                    <th colSpan={6} className="px-4 py-2 text-center text-[9px] font-black text-amber-700 uppercase tracking-widest border-l border-amber-200 bg-amber-50 whitespace-nowrap">
+                      Total mois
+                    </th>
                     <th className="px-4 py-2 text-center text-[9px] font-black text-sky-600 uppercase tracking-widest border-l border-sky-100 bg-sky-50 whitespace-nowrap" rowSpan={2}>
                       Budget<br/>SEA
                     </th>
@@ -415,12 +421,20 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                     {detailedSources.map((src) => (
                       <React.Fragment key={`sub-${src}`}>
                         <th className="px-3 py-2 text-center text-[8px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap border-l border-slate-200">Leads</th>
-                        <th className="px-3 py-2 text-center text-[8px] font-black text-blue-300 uppercase tracking-widest whitespace-nowrap">%RDV</th>
+                        <th className="px-3 py-2 text-center text-[8px] font-black text-blue-400 uppercase tracking-widest whitespace-nowrap">%RDV</th>
                         <th className="px-3 py-2 text-center text-[8px] font-black text-blue-500 uppercase tracking-widest whitespace-nowrap">RDV</th>
-                        <th className="px-3 py-2 text-center text-[8px] font-black text-emerald-300 uppercase tracking-widest whitespace-nowrap">%Close</th>
+                        <th className="px-3 py-2 text-center text-[8px] font-black text-emerald-400 uppercase tracking-widest whitespace-nowrap">%Close</th>
                         <th className="px-3 py-2 text-center text-[8px] font-black text-emerald-500 uppercase tracking-widest whitespace-nowrap">Ventes</th>
+                        <th className="px-3 py-2 text-center text-[8px] font-black text-violet-500 uppercase tracking-widest whitespace-nowrap">CA</th>
                       </React.Fragment>
                     ))}
+                    {/* Sous-colonnes totaux */}
+                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap border-l border-amber-200 bg-amber-50/60">Leads</th>
+                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">%RDV</th>
+                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">RDV</th>
+                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">%Close</th>
+                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">Ventes</th>
+                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">CA</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -438,19 +452,39 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                           {formatMonthLabel(month.monthYear)}
                         </td>
                         {detailedSources.map((src) => {
-                          const d = srcMap[src] || { leads: 0, rdv: 0, ventes: 0 };
+                          const d = srcMap[src] || { leads: 0, rdv: 0, ventes: 0, ca: 0 };
                           const txRdv = d.leads > 0 ? Math.round(d.rdv / d.leads * 100) : 0;
                           const txClose = d.rdv > 0 ? Math.round(d.ventes / d.rdv * 100) : 0;
                           return (
                             <React.Fragment key={`row-${src}`}>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-700 border-l border-slate-100">{d.leads}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-bold text-blue-300">{txRdv}%</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-blue-400">{txRdv}%</td>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-blue-600">{d.rdv}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-300">{txClose}%</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-500">{txClose}%</td>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-600">{d.ventes}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-violet-600 whitespace-nowrap">{d.ca > 0 ? `${fmt(d.ca)} €` : '—'}</td>
                             </React.Fragment>
                           );
                         })}
+                        {/* Totaux mois */}
+                        {(() => {
+                          const totLeads  = detailedSources.reduce((s, src) => s + (srcMap[src]?.leads  ?? 0), 0);
+                          const totRdv    = detailedSources.reduce((s, src) => s + (srcMap[src]?.rdv    ?? 0), 0);
+                          const totVentes = detailedSources.reduce((s, src) => s + (srcMap[src]?.ventes ?? 0), 0);
+                          const totCa     = detailedSources.reduce((s, src) => s + (srcMap[src]?.ca     ?? 0), 0);
+                          const totTxRdv   = totLeads  > 0 ? Math.round(totRdv   / totLeads  * 100) : 0;
+                          const totTxClose = totRdv    > 0 ? Math.round(totVentes / totRdv    * 100) : 0;
+                          return (
+                            <>
+                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-700 border-l border-amber-100 bg-amber-50/40">{totLeads}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-600 bg-amber-50/40">{totTxRdv}%</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-700 bg-amber-50/40">{totRdv}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-600 bg-amber-50/40">{totTxClose}%</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-700 bg-amber-50/40">{totVentes}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-700 bg-amber-50/40 whitespace-nowrap">{totCa > 0 ? `${fmt(totCa)} €` : '—'}</td>
+                            </>
+                          );
+                        })()}
                         {/* Budget SEA */}
                         <td className="px-4 py-3 text-center tabular-nums font-black text-sky-700 border-l border-sky-50 whitespace-nowrap">
                           {isLoading ? (
@@ -463,6 +497,68 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                     );
                   })}
                 </tbody>
+                {/* Ligne moyenne */}
+                {(() => {
+                  const nMonths = monthlyData.length;
+                  if (nMonths === 0) return null;
+                  const srcTotals: Record<string, { leads: number; rdv: number; ventes: number; ca: number }> = {};
+                  detailedSources.forEach(src => { srcTotals[src] = { leads: 0, rdv: 0, ventes: 0, ca: 0 }; });
+                  monthlyData.forEach(month => {
+                    const srcMap = monthSourceMap[month.monthYear] || {};
+                    detailedSources.forEach(src => {
+                      const d = srcMap[src] || { leads: 0, rdv: 0, ventes: 0, ca: 0 };
+                      srcTotals[src].leads  += d.leads;
+                      srcTotals[src].rdv    += d.rdv;
+                      srcTotals[src].ventes += d.ventes;
+                      srcTotals[src].ca     += d.ca;
+                    });
+                  });
+                  const grandLeads  = detailedSources.reduce((s, src) => s + srcTotals[src].leads,  0);
+                  const grandRdv    = detailedSources.reduce((s, src) => s + srcTotals[src].rdv,    0);
+                  const grandVentes = detailedSources.reduce((s, src) => s + srcTotals[src].ventes, 0);
+                  const grandCa     = detailedSources.reduce((s, src) => s + srcTotals[src].ca,     0);
+                  const avgGrandLeads  = Math.round(grandLeads  / nMonths);
+                  const avgGrandRdv    = Math.round(grandRdv    / nMonths);
+                  const avgGrandVentes = Math.round(grandVentes / nMonths);
+                  const avgGrandCa     = Math.round(grandCa     / nMonths);
+                  const avgGrandTxRdv   = avgGrandLeads  > 0 ? Math.round(avgGrandRdv   / avgGrandLeads  * 100) : 0;
+                  const avgGrandTxClose = avgGrandRdv    > 0 ? Math.round(avgGrandVentes / avgGrandRdv    * 100) : 0;
+                  return (
+                    <tfoot>
+                      <tr className="border-t-2 border-slate-200 bg-slate-50/80">
+                        <td className="px-4 py-3 font-black text-slate-500 whitespace-nowrap sticky left-0 bg-slate-50/80 z-10 text-[10px] uppercase tracking-widest">Moy. / mois</td>
+                        {detailedSources.map(src => {
+                          const t = srcTotals[src];
+                          const avgLeads  = Math.round(t.leads  / nMonths);
+                          const avgRdv    = Math.round(t.rdv    / nMonths);
+                          const avgVentes = Math.round(t.ventes / nMonths);
+                          const avgCa     = Math.round(t.ca     / nMonths);
+                          const avgTxRdv   = avgLeads  > 0 ? Math.round(avgRdv   / avgLeads  * 100) : 0;
+                          const avgTxClose = avgRdv    > 0 ? Math.round(avgVentes / avgRdv    * 100) : 0;
+                          return (
+                            <React.Fragment key={`avg-${src}`}>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-500 border-l border-slate-200 text-[11px]">{avgLeads}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-blue-300 text-[11px]">{avgTxRdv}%</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-500 text-[11px]">{avgRdv}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-400 text-[11px]">{avgTxClose}%</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-500 text-[11px]">{avgVentes}</td>
+                              <td className="px-3 py-3 text-center tabular-nums font-bold text-violet-400 text-[11px] whitespace-nowrap">{avgCa > 0 ? `${fmt(avgCa)} €` : '—'}</td>
+                            </React.Fragment>
+                          );
+                        })}
+                        {/* Total moyenne */}
+                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 border-l border-amber-100 bg-amber-50/20 text-[11px]">{avgGrandLeads}</td>
+                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-400 bg-amber-50/20 text-[11px]">{avgGrandTxRdv}%</td>
+                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/20 text-[11px]">{avgGrandRdv}</td>
+                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-400 bg-amber-50/20 text-[11px]">{avgGrandTxClose}%</td>
+                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/20 text-[11px]">{avgGrandVentes}</td>
+                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/20 text-[11px] whitespace-nowrap">{avgGrandCa > 0 ? `${fmt(avgGrandCa)} €` : '—'}</td>
+                        {/* Budget SEA — cellule vide dans la moyenne */}
+                        <td className="px-4 py-3 border-l border-sky-50 text-center text-slate-300 text-[11px]">—</td>
+                      </tr>
+                    </tfoot>
+                  );
+                })()}
               </table>
             </div>
           </div>
