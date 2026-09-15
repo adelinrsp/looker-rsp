@@ -403,7 +403,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                     {detailedSources.map((src, i) => (
                       <th
                         key={`grp-${src}`}
-                        colSpan={8}
+                        colSpan={5}
                         className={`px-4 py-2 text-center text-[9px] font-black uppercase tracking-widest border-l border-slate-200 ${i % 2 === 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-600'}`}
                       >
                         {src}
@@ -425,9 +425,6 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                         <th className="px-3 py-2 text-center text-[8px] font-black text-blue-500 uppercase tracking-widest whitespace-nowrap">RDV</th>
                         <th className="px-3 py-2 text-center text-[8px] font-black text-emerald-400 uppercase tracking-widest whitespace-nowrap">%Close</th>
                         <th className="px-3 py-2 text-center text-[8px] font-black text-emerald-500 uppercase tracking-widest whitespace-nowrap">Ventes</th>
-                        <th className="px-3 py-2 text-center text-[8px] font-black text-violet-400 uppercase tracking-widest whitespace-nowrap">CP Lead</th>
-                        <th className="px-3 py-2 text-center text-[8px] font-black text-violet-500 uppercase tracking-widest whitespace-nowrap">CP RDV</th>
-                        <th className="px-3 py-2 text-center text-[8px] font-black text-violet-600 uppercase tracking-widest whitespace-nowrap">CP Vente</th>
                       </React.Fragment>
                     ))}
                     {/* Sous-colonnes totaux */}
@@ -459,10 +456,6 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                           const d = srcMap[src] || { leads: 0, rdv: 0, ventes: 0, ca: 0 };
                           const txRdv   = d.leads  > 0 ? Math.round(d.rdv    / d.leads  * 100) : 0;
                           const txClose = d.rdv    > 0 ? Math.round(d.ventes / d.rdv    * 100) : 0;
-                          const cpLead  = seaSpend > 0 && d.leads  > 0 ? Math.round(seaSpend / d.leads)  : 0;
-                          const cpRdv   = seaSpend > 0 && d.rdv    > 0 ? Math.round(seaSpend / d.rdv)    : 0;
-                          const cpVente = seaSpend > 0 && d.ventes > 0 ? Math.round(seaSpend / d.ventes) : 0;
-                          const fmtCp = (v: number) => v > 0 ? `${fmt(v)} €` : '—';
                           return (
                             <React.Fragment key={`row-${src}`}>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-700 border-l border-slate-100">{d.leads}</td>
@@ -470,9 +463,6 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-blue-600">{d.rdv}</td>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-500">{txClose}%</td>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-600">{d.ventes}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-bold text-violet-400 whitespace-nowrap">{fmtCp(cpLead)}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-bold text-violet-500 whitespace-nowrap">{fmtCp(cpRdv)}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-bold text-violet-600 whitespace-nowrap">{fmtCp(cpVente)}</td>
                             </React.Fragment>
                           );
                         })}
@@ -554,9 +544,6 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                           const avgVentes = Math.round(t.ventes / nMonths);
                           const avgTxRdv   = avgLeads  > 0 ? Math.round(avgRdv   / avgLeads  * 100) : 0;
                           const avgTxClose = avgRdv    > 0 ? Math.round(avgVentes / avgRdv    * 100) : 0;
-                          const avgCpLead  = avgSeaSpend > 0 && avgLeads  > 0 ? Math.round(avgSeaSpend / avgLeads)  : 0;
-                          const avgCpRdv   = avgSeaSpend > 0 && avgRdv    > 0 ? Math.round(avgSeaSpend / avgRdv)    : 0;
-                          const avgCpVente = avgSeaSpend > 0 && avgVentes > 0 ? Math.round(avgSeaSpend / avgVentes) : 0;
                           return (
                             <React.Fragment key={`avg-${src}`}>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-500 border-l border-slate-200 text-[11px]">{avgLeads}</td>
@@ -564,9 +551,6 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-500 text-[11px]">{avgRdv}</td>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-emerald-400 text-[11px]">{avgTxClose}%</td>
                               <td className="px-3 py-3 text-center tabular-nums font-bold text-slate-500 text-[11px]">{avgVentes}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-bold text-violet-300 text-[11px] whitespace-nowrap">{fmtCp(avgCpLead)}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-bold text-violet-400 text-[11px] whitespace-nowrap">{fmtCp(avgCpRdv)}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-bold text-violet-500 text-[11px] whitespace-nowrap">{fmtCp(avgCpVente)}</td>
                             </React.Fragment>
                           );
                         })}
