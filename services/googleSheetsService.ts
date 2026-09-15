@@ -1,7 +1,7 @@
 
-import { Lead, CompanyExpense, ClientDiscovery, SocialQuestionnaire, EditorialEvent } from '../types';
+import { Lead, CompanyExpense, EditorialEvent } from '../types';
 
-const PLANNING_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws6mv6wn5dhQP-vsukyZZayydNxilFK8y_ulblTgLMV6snjZJJtXgfzzJ-UIJd-14XcQ/exec';
+const PLANNING_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyokYHBUlT1pZlDMwlmLEQsDXS_WJrzVZetjc7Y4LWtVbsZy4fxXAZj1tRmb__-IVidtQ/exec';
 
 /**
  * Fonction générique pour effectuer un fetch sur Google Apps Script.
@@ -57,14 +57,6 @@ export async function fetchLeads(scriptUrl: string): Promise<Lead[]> {
     ...item,
     notes: item.notes ? String(item.notes).split(' | ').filter(Boolean) : []
   }));
-}
-
-export async function fetchDiscovery(scriptUrl: string): Promise<ClientDiscovery[]> {
-  return await fetchFromScript(scriptUrl, { type: 'discovery' });
-}
-
-export async function fetchSocialQuestionnaire(scriptUrl: string): Promise<SocialQuestionnaire[]> {
-  return await fetchFromScript(scriptUrl, { type: 'social_questionnaire' });
 }
 
 export async function fetchExpenses(scriptUrl: string): Promise<CompanyExpense[]> {

@@ -17,12 +17,12 @@ import QuestionnaireView from './components/QuestionnaireView';
 import SalesPerformanceAnalysis from './components/SalesPerformanceAnalysis';
 import TeleproPerformance from './components/TeleproPerformance';
 import MonthlyAnalysis from './components/MonthlyAnalysis';
-import { Lead, CompanyExpense, ClientDiscovery, SocialQuestionnaire, EditorialEvent } from './types';
+import { Lead, CompanyExpense, EditorialEvent } from './types';
 import * as googleService from './services/googleSheetsService';
-import { fetchFacebookAdsPerformance, fetchFacebookCreativesPerformance, FacebookAdsData, FacebookCreativeData } from './services/facebookAdsService';
+import { fetchFacebookAdsPerformance, FacebookAdsData } from './services/facebookAdsService';
 import { fetchGoogleAdsPerformance, GoogleAdsData } from './services/googleAdsService';
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws6mv6wn5dhQP-vsukyZZayydNxilFK8y_ulblTgLMV6snjZJJtXgfzzJ-UIJd-14XcQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyokYHBUlT1pZlDMwlmLEQsDXS_WJrzVZetjc7Y4LWtVbsZy4fxXAZj1tRmb__-IVidtQ/exec';
 const LEADS_SCRIPT_URL = SCRIPT_URL;
 const QUESTIONNAIRE_SCRIPT_URL = SCRIPT_URL;
 
@@ -36,11 +36,8 @@ const App: React.FC = () => {
   const [analysisCategory, setAnalysisCategory] = useState<AnalysisCategory>('all');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [expenses, setExpenses] = useState<CompanyExpense[]>([]);
-  const [discovery, setDiscovery] = useState<ClientDiscovery[]>([]);
-  const [socialQuestionnaire, setSocialQuestionnaire] = useState<SocialQuestionnaire[]>([]);
   const [fbData, setFbData] = useState<FacebookAdsData | null>(null);
   const [googleData, setGoogleData] = useState<GoogleAdsData | null>(null);
-  const [creatives, setCreatives] = useState<FacebookCreativeData[]>([]);
   const [editorialEvents, setEditorialEvents] = useState<EditorialEvent[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,19 +102,15 @@ const App: React.FC = () => {
   const initStaticData = async () => {
     setIsLoading(true);
     try {
-      const [leadsRes, expensesRes, discoveryRes, socialRes, editorialRes] = await Promise.allSettled([
+      const [leadsRes, expensesRes, editorialRes] = await Promise.allSettled([
         googleService.fetchLeads(LEADS_SCRIPT_URL),
         googleService.fetchExpenses(LEADS_SCRIPT_URL),
-        googleService.fetchDiscovery(QUESTIONNAIRE_SCRIPT_URL),
-        googleService.fetchSocialQuestionnaire(QUESTIONNAIRE_SCRIPT_URL),
         googleService.fetchEditorialPlanning()
       ]);
       const ok = <T,>(r: PromiseSettledResult<T>, fallback: T): T =>
         r.status === 'fulfilled' ? r.value : fallback;
       setLeads(ok(leadsRes, []));
       setExpenses(ok(expensesRes, []));
-      setDiscovery(ok(discoveryRes, []));
-      setSocialQuestionnaire(ok(socialRes, []));
       setEditorialEvents(ok(editorialRes, []));
     } catch (error) {
       console.error('Erreur initStaticData:', error);
@@ -127,16 +120,14 @@ const App: React.FC = () => {
   };
 
   const fetchAdsData = async () => {
-    const [fbRes, googleRes, creativesRes] = await Promise.allSettled([
+    const [fbRes, googleRes] = await Promise.allSettled([
       fetchFacebookAdsPerformance(startDate, endDate),
       fetchGoogleAdsPerformance(LEADS_SCRIPT_URL, startDate, endDate),
-      fetchFacebookCreativesPerformance(startDate, endDate),
     ]);
     const ok = <T,>(r: PromiseSettledResult<T>, fallback: T): T =>
       r.status === 'fulfilled' ? r.value : fallback;
     setFbData(ok(fbRes, null));
     setGoogleData(ok(googleRes, null));
-    setCreatives(ok(creativesRes, []));
   };
 
   const handleUpdateLead = async (updatedLead: Lead) => {
@@ -343,9 +334,9 @@ const App: React.FC = () => {
                 />
               )}
               {activeTab === 'questionnaires' && (
-                <QuestionnaireView 
-                  discovery={discovery}
-                  social={socialQuestionnaire}
+                <QuestionnaireView
+                  discovery={[]}
+                  social={[]}
                 />
               )}
               {activeTab === 'appointments' && (
@@ -355,7 +346,7 @@ const App: React.FC = () => {
                 />
               )}
               {activeTab === 'expenses' && <ExpenseAnalysis expenses={expenses} leads={leads} startDate={startDate} endDate={endDate} />}
-              {activeTab === 'creatives' && <CreativeAnalysis leads={leads} startDate={startDate} endDate={endDate} initialCreatives={creatives} />}
+              {activeTab === 'creatives' && <CreativeAnalysis leads={leads} startDate={startDate} endDate={endDate} initialCreatives={[]} />}
               {activeTab === 'posts' && <FacebookPosts />}
               {activeTab === 'sources' && <SourceAnalysis leads={leads} startDate={startDate} endDate={endDate} />}
               {activeTab === 'map' && <LeadMapView leads={leads} startDate={startDate} endDate={endDate} />}
@@ -365,7 +356,7 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {!isLoading && <ChatBot leads={leads} fbData={fbData} googleData={googleData} creatives={creatives} companyExpenses={expenses} />}
+      {!isLoading && <ChatBot leads={leads} fbData={fbData} googleData={googleData} creatives={[]} companyExpenses={expenses} />}
 
       {selectedLead && (
         <LeadDetailModal 
