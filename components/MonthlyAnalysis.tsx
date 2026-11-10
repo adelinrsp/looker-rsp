@@ -750,26 +750,30 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
 
       {/* Totaux */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2 border-t border-slate-100">
-        <div className="bg-white p-5 rounded-[20px] border border-slate-100 shadow-sm">
+        <div className="bg-white p-5 rounded-[20px] border border-slate-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-4 right-4 h-0.5 bg-gradient-to-r from-amber-400 to-amber-300 rounded-full" />
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Leads</p>
           <p className="text-3xl font-black text-slate-900 tabular-nums">{totals.leadsCount}</p>
           <p className="text-[9px] text-slate-400 mt-1">Sur {monthlyData.length} mois</p>
         </div>
-        <div className="bg-blue-50 p-5 rounded-[20px] border border-blue-100 shadow-sm">
+        <div className="bg-white p-5 rounded-[20px] border border-blue-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-4 right-4 h-0.5 bg-gradient-to-r from-blue-400 to-blue-300 rounded-full" />
           <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Total RDV</p>
           <p className="text-3xl font-black text-blue-700 tabular-nums">{totals.appointmentsCount}</p>
           <p className="text-[9px] text-blue-400 mt-1">
             {totals.leadsCount > 0 ? ((totals.appointmentsCount / totals.leadsCount) * 100).toFixed(1) : '0'}% taux
           </p>
         </div>
-        <div className="bg-emerald-50 p-5 rounded-[20px] border border-emerald-100 shadow-sm">
-          <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">Total Ventes</p>
+        <div className="bg-white p-5 rounded-[20px] border border-emerald-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-4 right-4 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full" />
+          <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">Total Ventes</p>
           <p className="text-3xl font-black text-emerald-700 tabular-nums">{totals.salesCount}</p>
           <p className="text-[9px] text-emerald-400 mt-1">
             {totals.appointmentsCount > 0 ? ((totals.salesCount / totals.appointmentsCount) * 100).toFixed(1) : '0'}% closing
           </p>
         </div>
-        <div className="bg-violet-50 p-5 rounded-[20px] border border-violet-100 shadow-sm">
+        <div className="bg-white p-5 rounded-[20px] border border-violet-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-4 right-4 h-0.5 bg-gradient-to-r from-violet-400 to-violet-300 rounded-full" />
           <p className="text-[9px] font-black text-violet-400 uppercase tracking-widest mb-1">CP Vente</p>
           <p className="text-3xl font-black text-violet-700 tabular-nums">{fmtCost(totalSpend, totals.salesCount)}</p>
           <p className="text-[9px] text-violet-400 mt-1">

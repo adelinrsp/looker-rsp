@@ -373,7 +373,8 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
         {/* Colonne de Gauche : KPIs Standard */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Ligne 1 */}
-          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between">
+          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-amber-400 to-amber-300 rounded-full" />
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-premium mb-1.5">Acquisition</p>
               <h3 className="text-4xl font-bold text-slate-900 tabular-nums tracking-tighter">{stats.current.prospects.toLocaleString()}</h3>
@@ -381,7 +382,8 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
             </div>
             <TrendBadge value={stats.trends.prospects} prevValue={stats.previous.prospects} />
           </div>
-          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between">
+          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-blue-400 to-blue-300 rounded-full" />
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-premium mb-1.5">Qualification</p>
               <h3 className="text-4xl font-bold text-slate-900 tabular-nums tracking-tighter">{stats.current.rdvs.toLocaleString()}</h3>
@@ -389,7 +391,8 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
             </div>
             <TrendBadge value={stats.trends.rdvs} prevValue={stats.previous.rdvs} />
           </div>
-          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between">
+          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full" />
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-premium mb-1.5">Transformation</p>
               <h3 className="text-4xl font-bold text-slate-900 tabular-nums tracking-tighter">{stats.current.sales.toLocaleString()}</h3>
@@ -401,21 +404,24 @@ const ResultsAnalysis: React.FC<ResultsAnalysisProps> = ({ leads, startDate, end
           {/* Ligne 2 */}
           {!shouldHideCommercialMetrics && (
             <>
-              <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between">
+              <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-slate-300 to-slate-200 rounded-full" />
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-premium mb-1.5">CPL Réel</p>
                   <h3 className="text-4xl font-bold text-slate-900 tracking-tighter">{(stats.current.prospects > 0 ? stats.current.spend / stats.current.prospects : 0).toFixed(1)}<span className="text-lg text-slate-300">€</span></h3>
                 </div>
                 <TrendBadge value={stats.trends.cpl} prevValue={stats.previous.prospects > 0 ? stats.previous.spend / stats.previous.prospects : 0} unit=" €" isInverted={true} />
               </div>
-              <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between">
+              <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-violet-400 to-violet-300 rounded-full" />
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-premium mb-1.5">CP Qualifié</p>
                   <h3 className="text-4xl font-bold text-slate-900 tracking-tighter">{(stats.current.rdvs > 0 ? stats.current.spend / stats.current.rdvs : 0).toFixed(1)}<span className="text-lg text-slate-300">€</span></h3>
                 </div>
                 <TrendBadge value={stats.trends.cpr} prevValue={stats.previous.rdvs > 0 ? stats.previous.spend / stats.previous.rdvs : 0} unit=" €" isInverted={true} />
               </div>
-              <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between">
+              <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-rose-400 to-rose-300 rounded-full" />
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-premium mb-1.5">CP Vente</p>
                   <h3 className="text-4xl font-bold text-slate-900 tracking-tighter">{(stats.current.sales > 0 ? stats.current.spend / stats.current.sales : 0).toFixed(1)}<span className="text-lg text-slate-300">€</span></h3>

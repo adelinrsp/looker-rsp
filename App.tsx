@@ -162,7 +162,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -171,13 +171,10 @@ const App: React.FC = () => {
         onToggle={() => setSidebarCollapsed(v => !v)}
       />
 
-      <main className={`flex-1 ${sidebarCollapsed ? 'ml-16' : 'ml-64'} p-8 xl:p-12 transition-all duration-300`}>
+      <main className="flex-1 ml-24 p-8 xl:p-12">
         <header className="flex items-center justify-between mb-12">
           <div className="flex items-end space-x-10">
             <div>
-              <div className="flex items-center space-x-3 mb-3">
-                 <span className="px-3 py-1 bg-slate-900 text-white text-[10px] font-bold uppercase rounded-lg shadow-lg tracking-premium">Console Pilotage</span>
-              </div>
               <h1 className="text-5xl font-bold text-slate-900 tracking-tight whitespace-nowrap">
                 {activeTab === 'results' ? 'Performance Globale' :
                  activeTab === 'telepro_perf' ? 'Performance Téléprospection' :
@@ -293,7 +290,7 @@ const App: React.FC = () => {
               <p className="text-slate-400 font-bold uppercase tracking-premium text-[11px] animate-pulse">Analyse Rhône Solaire en cours...</p>
             </div>
           ) : (
-            <>
+            <div key={activeTab} className="animate-in fade-in duration-200">
               {activeTab === 'results' && (
                 <ResultsAnalysis
                   leads={leads}
@@ -351,7 +348,7 @@ const App: React.FC = () => {
               {activeTab === 'sources' && <SourceAnalysis leads={leads} startDate={startDate} endDate={endDate} />}
               {activeTab === 'map' && <LeadMapView leads={leads} startDate={startDate} endDate={endDate} />}
               {activeTab === 'targeting' && <GeoTargeting leads={leads} />}
-            </>
+            </div>
           )}
         </div>
       </main>

@@ -196,16 +196,25 @@ const LeadMapView: React.FC<LeadMapViewProps> = ({ leads, startDate, endDate }) 
         </div>
       </div>
 
-      <div className="flex-1 rounded-[32px] overflow-hidden bg-slate-50">
-        <MapContainer 
-          center={[45.75, 4.85]} 
-          zoom={8} 
-          style={{ height: '100%', width: '100%' }} 
-          zoomControl={false} 
+      <div className="flex-1 rounded-[32px] overflow-hidden bg-slate-100 relative">
+        {filteredLeads.length > 0 && Object.keys(coords).length === 0 && progress === 0 && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-50/90 backdrop-blur-sm rounded-[32px]">
+            <div className="w-16 h-16 rounded-3xl bg-slate-900 flex items-center justify-center mb-4 shadow-xl">
+              <i className="fas fa-map-location-dot text-amber-500 text-2xl" />
+            </div>
+            <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">Carte non disponible</p>
+            <p className="text-[10px] text-slate-400 font-medium">Données géographiques indisponibles en local</p>
+          </div>
+        )}
+        <MapContainer
+          center={[45.75, 4.85]}
+          zoom={8}
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={false}
           attributionControl={false}
         >
           <MapStateController coords={coords} leadsCount={filteredLeads.length} />
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <ZoomControl position="bottomright" />
 
           {clusters.map(c => {

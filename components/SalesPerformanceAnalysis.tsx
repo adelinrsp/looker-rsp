@@ -217,11 +217,13 @@ const SalesPerformanceAnalysis: React.FC<SalesPerformanceAnalysisProps> = ({ lea
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 p-4 rounded-2xl">
+                  <div className="bg-white border border-slate-100 p-4 rounded-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-3 right-3 h-0.5 bg-gradient-to-r from-slate-300 to-slate-200 rounded-full" />
                     <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Opportunités</p>
                     <p className="text-lg font-black text-slate-900">{sp.opportunities}</p>
                   </div>
-                  <div className="bg-emerald-50 p-4 rounded-2xl">
+                  <div className="bg-white border border-slate-100 p-4 rounded-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-3 right-3 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full" />
                     <p className="text-[9px] font-black text-emerald-600 uppercase mb-1">Ventes</p>
                     <p className="text-lg font-black text-emerald-600">{sp.sales}</p>
                   </div>
