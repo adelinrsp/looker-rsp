@@ -57,6 +57,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
   const [monthlyAdSpend, setMonthlyAdSpend] = useState<Record<string, MonthlyAdSpend>>({});
   const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
+  const [commercialView, setCommercialView] = useState(false);
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -330,8 +331,16 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
   return (
     <div className="space-y-6 animate-fade-in">
 
-      {/* Switch vue Simplifiée / Détaillée */}
-      <div className="flex justify-end">
+      {/* Switch vue Simplifiée / Détaillée + Vue commerciale */}
+      <div className="flex justify-end items-center gap-3">
+        <label className="flex items-center gap-2 cursor-pointer select-none" onClick={() => setCommercialView(v => !v)}>
+          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
+            commercialView ? 'bg-slate-900 border-slate-900' : 'border-slate-300 bg-white'
+          }`}>
+            {commercialView && <i className="fas fa-check text-white text-[7px]" />}
+          </div>
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Vue commerciale</span>
+        </label>
         <div className="flex items-center bg-slate-100 rounded-xl p-1 gap-1">
           <button
             onClick={() => setViewMode('simple')}
@@ -359,7 +368,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
       </div>
 
       {/* Bandeau dépenses globales période */}
-      <div className="grid grid-cols-3 gap-4">
+      {!commercialView && <div className="grid grid-cols-3 gap-4">
         <div className="flex items-center space-x-4 bg-[#1877F2]/5 border border-[#1877F2]/10 rounded-2xl px-6 py-4">
           <div className="w-10 h-10 rounded-xl bg-[#1877F2] flex items-center justify-center flex-shrink-0">
             <i className="fab fa-facebook-f text-white text-sm"></i>
@@ -387,7 +396,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
             <p className="text-2xl font-black text-white tabular-nums">{fmt(totalSpend)} €</p>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Vue détaillée — tableau croisé mois × sources */}
       {viewMode === 'detailed' && (
@@ -409,12 +418,12 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                         {src}
                       </th>
                     ))}
-                    <th colSpan={8} className="px-4 py-2 text-center text-[9px] font-black text-amber-700 uppercase tracking-widest border-l border-amber-200 bg-amber-50 whitespace-nowrap">
+                    <th colSpan={commercialView ? 5 : 8} className="px-4 py-2 text-center text-[9px] font-black text-amber-700 uppercase tracking-widest border-l border-amber-200 bg-amber-50 whitespace-nowrap">
                       Total mois
                     </th>
-                    <th className="px-4 py-2 text-center text-[9px] font-black text-sky-600 uppercase tracking-widest border-l border-sky-100 bg-sky-50 whitespace-nowrap" rowSpan={2}>
+                    {!commercialView && <th className="px-4 py-2 text-center text-[9px] font-black text-sky-600 uppercase tracking-widest border-l border-sky-100 bg-sky-50 whitespace-nowrap" rowSpan={2}>
                       Budget<br/>SEA
-                    </th>
+                    </th>}
                   </tr>
                   {/* Ligne 2 : sous-colonnes Leads / %RDV / RDV / %Closing / Ventes */}
                   <tr className="border-b border-slate-200 bg-slate-50">
@@ -433,9 +442,9 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                     <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">RDV</th>
                     <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">%Close</th>
                     <th className="px-3 py-2 text-center text-[8px] font-black text-amber-600 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">Ventes</th>
-                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-500 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">CP Lead</th>
-                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-500 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">CP RDV</th>
-                    <th className="px-3 py-2 text-center text-[8px] font-black text-amber-500 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">CP Vente</th>
+                    {!commercialView && <th className="px-3 py-2 text-center text-[8px] font-black text-amber-500 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">CP Lead</th>}
+                    {!commercialView && <th className="px-3 py-2 text-center text-[8px] font-black text-amber-500 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">CP RDV</th>}
+                    {!commercialView && <th className="px-3 py-2 text-center text-[8px] font-black text-amber-500 uppercase tracking-widest whitespace-nowrap bg-amber-50/60">CP Vente</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -484,20 +493,20 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                               <td className="px-3 py-3 text-center tabular-nums font-black text-amber-700 bg-amber-50/40">{totRdv}</td>
                               <td className="px-3 py-3 text-center tabular-nums font-black text-amber-600 bg-amber-50/40">{totTxClose}%</td>
                               <td className="px-3 py-3 text-center tabular-nums font-black text-amber-700 bg-amber-50/40">{totVentes}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/40 whitespace-nowrap">{fmtCp(totCpLead)}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/40 whitespace-nowrap">{fmtCp(totCpRdv)}</td>
-                              <td className="px-3 py-3 text-center tabular-nums font-black text-amber-600 bg-amber-50/40 whitespace-nowrap">{fmtCp(totCpVente)}</td>
+                              {!commercialView && <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/40 whitespace-nowrap">{fmtCp(totCpLead)}</td>}
+                              {!commercialView && <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/40 whitespace-nowrap">{fmtCp(totCpRdv)}</td>}
+                              {!commercialView && <td className="px-3 py-3 text-center tabular-nums font-black text-amber-600 bg-amber-50/40 whitespace-nowrap">{fmtCp(totCpVente)}</td>}
                             </>
                           );
                         })()}
                         {/* Budget SEA */}
-                        <td className="px-4 py-3 text-center tabular-nums font-black text-sky-700 border-l border-sky-50 whitespace-nowrap">
+                        {!commercialView && <td className="px-4 py-3 text-center tabular-nums font-black text-sky-700 border-l border-sky-50 whitespace-nowrap">
                           {isLoading ? (
                             <span className="inline-block h-3 w-14 bg-sky-100 animate-pulse rounded"></span>
                           ) : (
                             `${fmt(seaSpend)} €`
                           )}
-                        </td>
+                        </td>}
                       </tr>
                     );
                   })}
@@ -560,11 +569,11 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                         <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/20 text-[11px]">{avgGrandRdv}</td>
                         <td className="px-3 py-3 text-center tabular-nums font-black text-amber-400 bg-amber-50/20 text-[11px]">{avgGrandTxClose}%</td>
                         <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/20 text-[11px]">{avgGrandVentes}</td>
-                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-400 bg-amber-50/20 text-[11px] whitespace-nowrap">{fmtCp(avgTotCpLead)}</td>
-                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-400 bg-amber-50/20 text-[11px] whitespace-nowrap">{fmtCp(avgTotCpRdv)}</td>
-                        <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/20 text-[11px] whitespace-nowrap">{fmtCp(avgTotCpVente)}</td>
+                        {!commercialView && <td className="px-3 py-3 text-center tabular-nums font-black text-amber-400 bg-amber-50/20 text-[11px] whitespace-nowrap">{fmtCp(avgTotCpLead)}</td>}
+                        {!commercialView && <td className="px-3 py-3 text-center tabular-nums font-black text-amber-400 bg-amber-50/20 text-[11px] whitespace-nowrap">{fmtCp(avgTotCpRdv)}</td>}
+                        {!commercialView && <td className="px-3 py-3 text-center tabular-nums font-black text-amber-500 bg-amber-50/20 text-[11px] whitespace-nowrap">{fmtCp(avgTotCpVente)}</td>}
                         {/* Budget SEA — cellule vide dans la moyenne */}
-                        <td className="px-4 py-3 border-l border-sky-50 text-center text-slate-300 text-[11px]">—</td>
+                        {!commercialView && <td className="px-4 py-3 border-l border-sky-50 text-center text-slate-300 text-[11px]">—</td>}
                       </tr>
                     </tfoot>
                   );
@@ -625,6 +634,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                     </div>
                   </div>
 
+                  {!commercialView && <>
                   {/* Séparateur */}
                   <div className="w-px h-10 bg-slate-100 flex-shrink-0"></div>
 
@@ -670,6 +680,7 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
                       </p>
                     )}
                   </div>
+                  </>}
                 </div>
               </div>
 
@@ -772,14 +783,14 @@ const MonthlyAnalysis: React.FC<MonthlyAnalysisProps> = ({
             {totals.appointmentsCount > 0 ? ((totals.salesCount / totals.appointmentsCount) * 100).toFixed(1) : '0'}% closing
           </p>
         </div>
-        <div className="bg-white p-5 rounded-[20px] border border-violet-100 shadow-sm relative overflow-hidden">
+        {!commercialView && <div className="bg-white p-5 rounded-[20px] border border-violet-100 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-4 right-4 h-0.5 bg-gradient-to-r from-violet-400 to-violet-300 rounded-full" />
           <p className="text-[9px] font-black text-violet-400 uppercase tracking-widest mb-1">CP Vente</p>
           <p className="text-3xl font-black text-violet-700 tabular-nums">{fmtCost(totalSpend, totals.salesCount)}</p>
           <p className="text-[9px] text-violet-400 mt-1">
             Budget total : {fmt(totalSpend)} €
           </p>
-        </div>
+        </div>}
       </div>
     </div>
   );
